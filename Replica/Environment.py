@@ -5,6 +5,10 @@ from gym import spaces
 import pygame
 import Reward_machine
 
+import pythomata
+import temprl
+from temprl.reward_machines.automata import RewardAutomaton
+
 import numpy as np
 
 
@@ -19,6 +23,190 @@ class GridWorldEnv(gym.Env):
 
         self.reward_machine = Reward_machine.RewardMachine(events=self.events)
         self.next_flag = False
+
+        alphabet = {'press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1', 'press_button_3_2',
+                    'not_press_button_3_2', 'press_button_3', 'press_target'}
+        states = {'init', 'door_1', 'door_2', 'door_3', 'door_3_1', 'door_3_2', 'target', 'end_state'}
+        initial_state = 'init'
+        goal_state = 'end_state'
+        accepting_states = {goal_state}
+        transition_function = {
+            'init': {
+                'press_button_1': 'door_1',
+            },
+            'door_1': {
+                'press_button_2': 'door_2',
+            },
+            'door_2': {
+                'press_button_3_1': 'door_3_1',
+                'press_button_3_2': 'door_3_2',
+            },
+            'door_3_1': {
+                'press_button_3_2': 'door_3',
+                'not_press_button_3_1': 'door_2',
+            },
+            'door_3_2': {
+                'press_button_3_1': 'door_3',
+                'not_press_button_3_2': 'door_2',
+            },
+            'door_3': {
+                'press_button_3': 'target',
+                'not_press_button_3_1': 'door_3_2',
+                'not_press_button_3_2': 'door_3_1',
+            },
+            'target': {
+                'press_target': 'end_state',
+            },
+        }
+
+        self.pythomata_rm = pythomata.SimpleDFA(
+            states,
+            alphabet,
+            initial_state,
+            accepting_states,
+            transition_function,
+        )
+        graph = self.pythomata_rm.to_graphviz()
+        graph.render('./images/reward_machine')
+        # print(self.pythomata_rm)
+
+        agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
+        agent_2_events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1',
+                          'press_button_3']
+        agent_3_events = ['press_button_2', 'press_button_3_2', 'not_press_button_3_2', 'press_button_3']
+
+        agents_events = [agent_1_events, agent_2_events, agent_3_events]
+
+        for idx, agent_events in enumerate(agents_events):
+
+            temp_transition_function = {
+                'init': {
+                    'press_button_1': 'door_1',
+                },
+                'door_1': {
+                    'press_button_2': 'door_2',
+                },
+                'door_2': {
+                    'press_button_3_1': 'door_3_1',
+                    'press_button_3_2': 'door_3_2',
+                },
+                'door_3_1': {
+                    'press_button_3_2': 'door_3',
+                    'not_press_button_3_1': 'door_2',
+                },
+                'door_3_2': {
+                    'press_button_3_1': 'door_3',
+                    'not_press_button_3_2': 'door_2',
+                },
+                'door_3': {
+                    'press_button_3': 'target',
+                    'not_press_button_3_1': 'door_3_2',
+                    'not_press_button_3_2': 'door_3_1',
+                },
+                'target': {
+                    'press_target': 'end_state',
+                },
+            }
+
+            # print(temp_transition_function.keys())
+            # print(temp_transition_function['init'])
+
+            agent_transition_function = {k: temp_transition_function[k] for k in temp_transition_function.keys()}
+
+            # print(agent_transition_function)
+            # print(agent_events)
+
+            # delete the unwanted node
+            signal = []
+            delete_key = []
+
+            # delete all unwanted actions and save state with no actions
+            for elem in agent_transition_function.items():
+                # print(elem)
+                # print(elem[1])
+                for item in {k: elem[1][k] for k in elem[1].keys()}:
+                    if item not in agent_events or item in signal:
+                        elem[1].pop(item)
+                    if item not in signal:
+                        # print('visited item', item)
+                        signal.append(item)
+                if elem[1] == {}:
+                    delete_key.append(elem[0])
+            # print(delete_key)
+
+            # delete the state with no actions
+            for elem in delete_key:
+                agent_transition_function.pop(elem)
+
+            # print(agent_transition_function)
+
+            # compress the states
+            change = []
+            for elem, next_elem in zip(list(agent_transition_function.items())[:-1],
+                                       list(agent_transition_function.items())[1:]):
+                # print(elem, 'next', next_elem)
+                # print(next_elem[0])
+                # print(elem[1][list(elem[1].keys())[0]])
+                if elem[1][list(elem[1].keys())[0]] != next_elem[0] and change == []:
+                    change = [elem[1][list(elem[1].keys())[0]], elem[0], next_elem[0]]
+                    # print(change)
+
+            # print(agent_transition_function)
+
+            # force the last node to be a goal state and the first to be the initial state
+            list(agent_transition_function.items())[-1][1][
+                list(list(agent_transition_function.items())[-1][1].keys())[0]
+            ] = goal_state
+
+            agent_transition_function[initial_state] = agent_transition_function.pop(
+                list(agent_transition_function.items())[0][0]
+            )
+
+            for elem, next_elem in zip(list(agent_transition_function.items())[:-1],
+                                       list(agent_transition_function.items())[1:]):
+
+                if change != [] and elem[1][list(elem[1].keys())[0]] == change[1]:
+                    # print('change', change[1])
+                    elem[1][list(elem[1].keys())[0]] = change[2]
+
+                if change != [] and elem[0] == change[1]:
+                    # print('pop', change[1])
+                    agent_transition_function[change[2]].update(agent_transition_function[change[1]])
+                    del agent_transition_function[change[1]]
+
+            # print(agent_transition_function)
+
+            for elem in list(agent_transition_function.items()):
+                if (change != [] and elem[1][list(elem[1].keys())[0]] == change[0] and
+                        change[0] not in list(agent_transition_function.keys())):
+                    elem[1][list(elem[1].keys())[0]] = change[2]
+
+            # print(agent_transition_function)
+
+            # agent_states = {k for k in agent_transition_function}
+            # agent_states = {k for k in agent_events}
+            # print('agent states', agent_states)
+
+            self.agent_pythomata_rm = pythomata.SimpleDFA(
+                states,
+                alphabet,
+                initial_state,
+                accepting_states,
+                agent_transition_function,
+            )
+
+            agent_graph = self.agent_pythomata_rm.to_graphviz()
+            agent_graph.render('./images/agent_' + str(idx + 1) + '_reward_machine')
+            # print(idx)
+
+        self.automata = RewardAutomaton(self.pythomata_rm, 1)
+        self.state = self.automata.initial_state
+        # print(self.automata.initial_state)
+        # print(self.automata.states)
+        # print(self.automata.initial_state)
+        print(self.automata.get_reward(self.state, {'press_button_2': 'button_3'}))
+        # print(self.automata.get_successor())
+        # print(self.automata.get_transitions())
 
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
@@ -242,17 +430,15 @@ class GridWorldEnv(gym.Env):
                 for wall in self._walls:
                     if ((np.all(self._agents_location[agent_idx] == wall[0]) and
                          np.all(self._agents_location[agent_idx] + direction == wall[1])) or
-                        (np.all(self._agents_location[agent_idx] == wall[1]) and
-                         np.all(self._agents_location[agent_idx] + direction == wall[0]))):
-
+                            (np.all(self._agents_location[agent_idx] == wall[1]) and
+                             np.all(self._agents_location[agent_idx] + direction == wall[0]))):
                         # print('wall collision')
                         collision = True
 
                 if (self._agents_location[agent_idx][0] + direction[0] > self.size - 1 or
-                   self._agents_location[agent_idx][1] + direction[1] > self.size - 1 or
-                   self._agents_location[agent_idx][0] + direction[0] < 0 or
-                   self._agents_location[agent_idx][1] + direction[1] < 0):
-
+                        self._agents_location[agent_idx][1] + direction[1] > self.size - 1 or
+                        self._agents_location[agent_idx][0] + direction[0] < 0 or
+                        self._agents_location[agent_idx][1] + direction[1] < 0):
                     # print('boarder collision')
                     collision = True
 
@@ -275,7 +461,6 @@ class GridWorldEnv(gym.Env):
                         opener[door_idx] += 1
 
                         if opener[door_idx] >= self._doors_opener[door_idx]:
-
                             event = self.events[door_idx]
                             self._doors_flag[door_idx] = 0
 

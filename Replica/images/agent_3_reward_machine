@@ -1,16 +1,12 @@
 digraph {
 	fake [style=invisible]
 	door_2
-	door_3_2
-	target
-	end_state [shape=doublecircle]
-	door_1
 	door_3
 	init [root=true]
-	door_3_1
+	end_state [shape=doublecircle]
 	fake -> init [style=bold]
-	door_2 -> door_3 [label=press_button_3_2]
 	door_3 -> door_2 [label=not_press_button_3_2]
-	init -> door_2 [label=press_button_2]
 	door_3 -> end_state [label=press_button_3]
+	door_2 -> door_3 [label=press_button_3_2]
+	init -> door_2 [label=press_button_2]
 }

@@ -14,7 +14,7 @@
 <title>fake</title>
 </g>
 <!-- init -->
-<g id="node8" class="node">
+<g id="node6" class="node">
 <title>init</title>
 <ellipse fill="none" stroke="black" cx="424.9" cy="-623.79" rx="27" ry="18"/>
 <text text-anchor="middle" x="424.9" y="-620.09" font-family="Times,serif" font-size="14.00">init</text>
@@ -25,57 +25,11 @@
 <path fill="none" stroke="black" stroke-width="2" d="M424.9,-678.6C424.9,-670.58 424.9,-660.84 424.9,-651.86"/>
 <polygon fill="black" stroke="black" stroke-width="2" points="428.4,-651.82 424.9,-641.82 421.4,-651.82 428.4,-651.82"/>
 </g>
-<!-- door_2 -->
-<g id="node2" class="node">
-<title>door_2</title>
-<ellipse fill="none" stroke="black" cx="424.9" cy="-449.79" rx="42.49" ry="18"/>
-<text text-anchor="middle" x="424.9" y="-446.09" font-family="Times,serif" font-size="14.00">door_2</text>
-</g>
-<!-- door_3_2 -->
-<g id="node3" class="node">
-<title>door_3_2</title>
-<ellipse fill="none" stroke="black" cx="261.9" cy="-362.79" rx="51.99" ry="18"/>
-<text text-anchor="middle" x="261.9" y="-359.09" font-family="Times,serif" font-size="14.00">door_3_2</text>
-</g>
-<!-- door_2&#45;&gt;door_3_2 -->
-<g id="edge12" class="edge">
-<title>door_2&#45;&gt;door_3_2</title>
-<path fill="none" stroke="black" d="M382.55,-448.85C321.51,-447.93 213.41,-442.21 188.9,-413.79 176.54,-399.47 192.96,-387.35 213.33,-378.64"/>
-<polygon fill="black" stroke="black" points="214.86,-381.8 222.88,-374.88 212.3,-375.29 214.86,-381.8"/>
-<text text-anchor="middle" x="251.4" y="-402.59" font-family="Times,serif" font-size="14.00">press_button_3_2</text>
-</g>
-<!-- door_3_1 -->
-<g id="node9" class="node">
-<title>door_3_1</title>
-<ellipse fill="none" stroke="black" cx="439.9" cy="-188.79" rx="51.99" ry="18"/>
-<text text-anchor="middle" x="439.9" y="-185.09" font-family="Times,serif" font-size="14.00">door_3_1</text>
-</g>
-<!-- door_2&#45;&gt;door_3_1 -->
-<g id="edge6" class="edge">
-<title>door_2&#45;&gt;door_3_1</title>
-<path fill="none" stroke="black" d="M460.42,-440C473.94,-434.74 487.98,-426.51 495.9,-413.79 506.99,-395.96 506.08,-243.16 495.9,-224.79 492.34,-218.38 487.07,-212.99 481.16,-208.5"/>
-<polygon fill="black" stroke="black" points="483.07,-205.57 472.81,-202.95 479.19,-211.4 483.07,-205.57"/>
-<text text-anchor="middle" x="565.4" y="-315.59" font-family="Times,serif" font-size="14.00">press_button_3_1</text>
-</g>
-<!-- door_3_2&#45;&gt;door_2 -->
-<g id="edge5" class="edge">
-<title>door_3_2&#45;&gt;door_2</title>
-<path fill="none" stroke="black" d="M286.22,-378.85C296.08,-384.99 307.56,-392.19 317.9,-398.79 328.18,-405.36 330.11,-408.09 340.9,-413.79 354.74,-421.11 370.46,-428.01 384.52,-433.71"/>
-<polygon fill="black" stroke="black" points="383.36,-437.02 393.95,-437.47 385.95,-430.52 383.36,-437.02"/>
-<text text-anchor="middle" x="418.4" y="-402.59" font-family="Times,serif" font-size="14.00">not_press_button_3_2</text>
-</g>
 <!-- door_3 -->
-<g id="node7" class="node">
+<g id="node2" class="node">
 <title>door_3</title>
 <ellipse fill="none" stroke="black" cx="191.9" cy="-275.79" rx="42.49" ry="18"/>
 <text text-anchor="middle" x="191.9" y="-272.09" font-family="Times,serif" font-size="14.00">door_3</text>
-</g>
-<!-- door_3_2&#45;&gt;door_3 -->
-<g id="edge11" class="edge">
-<title>door_3_2&#45;&gt;door_3</title>
-<path fill="none" stroke="black" d="M210.61,-359.71C186.94,-355.86 160.82,-346.89 145.9,-326.79 137.89,-316.02 146.09,-304.95 157.66,-295.97"/>
-<polygon fill="black" stroke="black" points="159.85,-298.71 166.05,-290.12 155.85,-292.97 159.85,-298.71"/>
-<text text-anchor="middle" x="208.4" y="-315.59" font-family="Times,serif" font-size="14.00">press_button_3_1</text>
 </g>
 <!-- target -->
 <g id="node4" class="node">
@@ -83,74 +37,120 @@
 <ellipse fill="none" stroke="black" cx="59.9" cy="-188.79" rx="39.79" ry="18"/>
 <text text-anchor="middle" x="59.9" y="-185.09" font-family="Times,serif" font-size="14.00">target</text>
 </g>
-<!-- end_state -->
+<!-- door_3&#45;&gt;target -->
+<g id="edge13" class="edge">
+<title>door_3&#45;&gt;target</title>
+<path fill="none" stroke="black" d="M152.07,-269.45C117.8,-263.95 72.15,-254.15 60.9,-239.79 55.9,-233.42 54.41,-225.07 54.54,-217.02"/>
+<polygon fill="black" stroke="black" points="58.05,-217.07 55.47,-206.8 51.08,-216.44 58.05,-217.07"/>
+<text text-anchor="middle" x="115.4" y="-228.59" font-family="Times,serif" font-size="14.00">press_button_3</text>
+</g>
+<!-- door_3_2 -->
+<g id="node8" class="node">
+<title>door_3_2</title>
+<ellipse fill="none" stroke="black" cx="261.9" cy="-362.79" rx="51.99" ry="18"/>
+<text text-anchor="middle" x="261.9" y="-359.09" font-family="Times,serif" font-size="14.00">door_3_2</text>
+</g>
+<!-- door_3&#45;&gt;door_3_2 -->
+<g id="edge6" class="edge">
+<title>door_3&#45;&gt;door_3_2</title>
+<path fill="none" stroke="black" d="M230.65,-283.31C247.19,-288.22 264.95,-296.8 274.9,-311.79 279.55,-318.8 279.04,-327.39 276.54,-335.46"/>
+<polygon fill="black" stroke="black" points="273.22,-334.32 272.7,-344.91 279.71,-336.96 273.22,-334.32"/>
+<text text-anchor="middle" x="356.4" y="-315.59" font-family="Times,serif" font-size="14.00">not_press_button_3_1</text>
+</g>
+<!-- door_3_1 -->
+<g id="node9" class="node">
+<title>door_3_1</title>
+<ellipse fill="none" stroke="black" cx="439.9" cy="-188.79" rx="51.99" ry="18"/>
+<text text-anchor="middle" x="439.9" y="-185.09" font-family="Times,serif" font-size="14.00">door_3_1</text>
+</g>
+<!-- door_3&#45;&gt;door_3_1 -->
+<g id="edge2" class="edge">
+<title>door_3&#45;&gt;door_3_1</title>
+<path fill="none" stroke="black" d="M187.1,-257.48C185.27,-246.79 185.18,-233.5 192.9,-224.79 216.61,-198.02 312.54,-191.22 377.63,-189.77"/>
+<polygon fill="black" stroke="black" points="377.86,-193.27 387.79,-189.58 377.73,-186.27 377.86,-193.27"/>
+<text text-anchor="middle" x="270.4" y="-228.59" font-family="Times,serif" font-size="14.00">not_press_button_3_2</text>
+</g>
+<!-- door_1 -->
+<g id="node3" class="node">
+<title>door_1</title>
+<ellipse fill="none" stroke="black" cx="424.9" cy="-536.79" rx="42.49" ry="18"/>
+<text text-anchor="middle" x="424.9" y="-533.09" font-family="Times,serif" font-size="14.00">door_1</text>
+</g>
+<!-- door_2 -->
 <g id="node5" class="node">
+<title>door_2</title>
+<ellipse fill="none" stroke="black" cx="424.9" cy="-449.79" rx="42.49" ry="18"/>
+<text text-anchor="middle" x="424.9" y="-446.09" font-family="Times,serif" font-size="14.00">door_2</text>
+</g>
+<!-- door_1&#45;&gt;door_2 -->
+<g id="edge5" class="edge">
+<title>door_1&#45;&gt;door_2</title>
+<path fill="none" stroke="black" d="M424.9,-518.59C424.9,-506.95 424.9,-491.34 424.9,-478.03"/>
+<polygon fill="black" stroke="black" points="428.4,-477.97 424.9,-467.97 421.4,-477.97 428.4,-477.97"/>
+<text text-anchor="middle" x="479.4" y="-489.59" font-family="Times,serif" font-size="14.00">press_button_2</text>
+</g>
+<!-- end_state -->
+<g id="node7" class="node">
 <title>end_state</title>
 <ellipse fill="none" stroke="black" cx="59.9" cy="-59.9" rx="55.8" ry="55.8"/>
 <ellipse fill="none" stroke="black" cx="59.9" cy="-59.9" rx="59.79" ry="59.79"/>
 <text text-anchor="middle" x="59.9" y="-56.2" font-family="Times,serif" font-size="14.00">end_state</text>
 </g>
 <!-- target&#45;&gt;end_state -->
-<g id="edge13" class="edge">
+<g id="edge12" class="edge">
 <title>target&#45;&gt;end_state</title>
 <path fill="none" stroke="black" d="M59.9,-170.68C59.9,-159.86 59.9,-145.08 59.9,-129.88"/>
 <polygon fill="black" stroke="black" points="63.4,-129.86 59.9,-119.86 56.4,-129.86 63.4,-129.86"/>
 <text text-anchor="middle" x="105.4" y="-141.59" font-family="Times,serif" font-size="14.00">press_target</text>
 </g>
-<!-- door_1 -->
-<g id="node6" class="node">
-<title>door_1</title>
-<ellipse fill="none" stroke="black" cx="424.9" cy="-536.79" rx="42.49" ry="18"/>
-<text text-anchor="middle" x="424.9" y="-533.09" font-family="Times,serif" font-size="14.00">door_1</text>
+<!-- door_2&#45;&gt;door_3_2 -->
+<g id="edge10" class="edge">
+<title>door_2&#45;&gt;door_3_2</title>
+<path fill="none" stroke="black" d="M382.55,-448.85C321.51,-447.93 213.41,-442.21 188.9,-413.79 176.54,-399.47 192.96,-387.35 213.33,-378.64"/>
+<polygon fill="black" stroke="black" points="214.86,-381.8 222.88,-374.88 212.3,-375.29 214.86,-381.8"/>
+<text text-anchor="middle" x="251.4" y="-402.59" font-family="Times,serif" font-size="14.00">press_button_3_2</text>
 </g>
-<!-- door_1&#45;&gt;door_2 -->
+<!-- door_2&#45;&gt;door_3_1 -->
 <g id="edge9" class="edge">
-<title>door_1&#45;&gt;door_2</title>
-<path fill="none" stroke="black" d="M424.9,-518.59C424.9,-506.95 424.9,-491.34 424.9,-478.03"/>
-<polygon fill="black" stroke="black" points="428.4,-477.97 424.9,-467.97 421.4,-477.97 428.4,-477.97"/>
-<text text-anchor="middle" x="479.4" y="-489.59" font-family="Times,serif" font-size="14.00">press_button_2</text>
-</g>
-<!-- door_3&#45;&gt;door_3_2 -->
-<g id="edge2" class="edge">
-<title>door_3&#45;&gt;door_3_2</title>
-<path fill="none" stroke="black" d="M230.65,-283.31C247.19,-288.22 264.95,-296.8 274.9,-311.79 279.55,-318.8 279.04,-327.39 276.54,-335.46"/>
-<polygon fill="black" stroke="black" points="273.22,-334.32 272.7,-344.91 279.71,-336.96 273.22,-334.32"/>
-<text text-anchor="middle" x="356.4" y="-315.59" font-family="Times,serif" font-size="14.00">not_press_button_3_1</text>
-</g>
-<!-- door_3&#45;&gt;target -->
-<g id="edge3" class="edge">
-<title>door_3&#45;&gt;target</title>
-<path fill="none" stroke="black" d="M152.07,-269.45C117.8,-263.95 72.15,-254.15 60.9,-239.79 55.9,-233.42 54.41,-225.07 54.54,-217.02"/>
-<polygon fill="black" stroke="black" points="58.05,-217.07 55.47,-206.8 51.08,-216.44 58.05,-217.07"/>
-<text text-anchor="middle" x="115.4" y="-228.59" font-family="Times,serif" font-size="14.00">press_button_3</text>
-</g>
-<!-- door_3&#45;&gt;door_3_1 -->
-<g id="edge7" class="edge">
-<title>door_3&#45;&gt;door_3_1</title>
-<path fill="none" stroke="black" d="M185.29,-257.54C182.43,-246.87 181.25,-233.58 188.9,-224.79 212.85,-197.26 311.14,-190.71 377.38,-189.51"/>
-<polygon fill="black" stroke="black" points="377.77,-193.01 387.72,-189.37 377.67,-186.01 377.77,-193.01"/>
-<text text-anchor="middle" x="266.4" y="-228.59" font-family="Times,serif" font-size="14.00">not_press_button_3_2</text>
+<title>door_2&#45;&gt;door_3_1</title>
+<path fill="none" stroke="black" d="M460.42,-440C473.94,-434.74 487.98,-426.51 495.9,-413.79 506.99,-395.96 506.08,-243.16 495.9,-224.79 492.34,-218.38 487.07,-212.99 481.16,-208.5"/>
+<polygon fill="black" stroke="black" points="483.07,-205.57 472.81,-202.95 479.19,-211.4 483.07,-205.57"/>
+<text text-anchor="middle" x="565.4" y="-315.59" font-family="Times,serif" font-size="14.00">press_button_3_1</text>
 </g>
 <!-- init&#45;&gt;door_1 -->
-<g id="edge8" class="edge">
+<g id="edge3" class="edge">
 <title>init&#45;&gt;door_1</title>
 <path fill="none" stroke="black" d="M424.9,-605.59C424.9,-593.95 424.9,-578.34 424.9,-565.03"/>
 <polygon fill="black" stroke="black" points="428.4,-564.97 424.9,-554.97 421.4,-564.97 428.4,-564.97"/>
 <text text-anchor="middle" x="479.4" y="-576.59" font-family="Times,serif" font-size="14.00">press_button_1</text>
 </g>
-<!-- door_3_1&#45;&gt;door_2 -->
-<g id="edge10" class="edge">
-<title>door_3_1&#45;&gt;door_2</title>
-<path fill="none" stroke="black" d="M481.83,-199.43C548.28,-216.96 666.83,-258.65 631.9,-326.79 600.05,-388.91 521.39,-421.95 470.72,-437.38"/>
-<polygon fill="black" stroke="black" points="469.59,-434.06 460.98,-440.23 471.56,-440.78 469.59,-434.06"/>
-<text text-anchor="middle" x="714.4" y="-315.59" font-family="Times,serif" font-size="14.00">not_press_button_3_1</text>
+<!-- door_3_2&#45;&gt;door_3 -->
+<g id="edge7" class="edge">
+<title>door_3_2&#45;&gt;door_3</title>
+<path fill="none" stroke="black" d="M210.61,-359.71C186.94,-355.86 160.82,-346.89 145.9,-326.79 137.89,-316.02 146.09,-304.95 157.66,-295.97"/>
+<polygon fill="black" stroke="black" points="159.85,-298.71 166.05,-290.12 155.85,-292.97 159.85,-298.71"/>
+<text text-anchor="middle" x="208.4" y="-315.59" font-family="Times,serif" font-size="14.00">press_button_3_1</text>
+</g>
+<!-- door_3_2&#45;&gt;door_2 -->
+<g id="edge4" class="edge">
+<title>door_3_2&#45;&gt;door_2</title>
+<path fill="none" stroke="black" d="M286.22,-378.85C296.08,-384.99 307.56,-392.19 317.9,-398.79 328.18,-405.36 330.11,-408.09 340.9,-413.79 354.74,-421.11 370.46,-428.01 384.52,-433.71"/>
+<polygon fill="black" stroke="black" points="383.36,-437.02 393.95,-437.47 385.95,-430.52 383.36,-437.02"/>
+<text text-anchor="middle" x="418.4" y="-402.59" font-family="Times,serif" font-size="14.00">not_press_button_3_2</text>
 </g>
 <!-- door_3_1&#45;&gt;door_3 -->
-<g id="edge4" class="edge">
+<g id="edge8" class="edge">
 <title>door_3_1&#45;&gt;door_3</title>
 <path fill="none" stroke="black" d="M410.65,-203.75C398.23,-209.9 383.69,-217.4 370.9,-224.79 360.33,-230.89 359.14,-235.05 347.9,-239.79 314.01,-254.09 273.4,-262.96 242.11,-268.2"/>
 <polygon fill="black" stroke="black" points="241.2,-264.8 231.88,-269.84 242.31,-271.71 241.2,-264.8"/>
 <text text-anchor="middle" x="433.4" y="-228.59" font-family="Times,serif" font-size="14.00">press_button_3_2</text>
+</g>
+<!-- door_3_1&#45;&gt;door_2 -->
+<g id="edge11" class="edge">
+<title>door_3_1&#45;&gt;door_2</title>
+<path fill="none" stroke="black" d="M481.83,-199.43C548.28,-216.96 666.83,-258.65 631.9,-326.79 600.05,-388.91 521.39,-421.95 470.72,-437.38"/>
+<polygon fill="black" stroke="black" points="469.59,-434.06 460.98,-440.23 471.56,-440.78 469.59,-434.06"/>
+<text text-anchor="middle" x="714.4" y="-315.59" font-family="Times,serif" font-size="14.00">not_press_button_3_1</text>
 </g>
 </g>
 </svg>

@@ -5,11 +5,15 @@ from gym import spaces
 import pygame
 import Reward_machine
 
+import Agent
+
 import pythomata
-import temprl
 from temprl.reward_machines.automata import RewardAutomaton
+from temprl.wrapper import TemporalGoal
 
 import numpy as np
+
+from typing import AbstractSet
 
 
 class GridWorldEnv(gym.Env):
@@ -30,6 +34,7 @@ class GridWorldEnv(gym.Env):
         initial_state = 'init'
         goal_state = 'end_state'
         accepting_states = {goal_state}
+
         transition_function = {
             'init': {
                 'press_button_1': 'door_1',
@@ -69,6 +74,21 @@ class GridWorldEnv(gym.Env):
         graph = self.pythomata_rm.to_graphviz()
         graph.render('./images/reward_machine')
         # print(self.pythomata_rm)
+
+        automata = RewardAutomaton(self.pythomata_rm, 1)
+        self.temp_goal = TemporalGoal(automata)
+
+        # Agents position and colors
+        # TODO change the _agents_location and _agents_color to not be self.
+        self._agents_location = [
+            np.array((0, 0)),
+            np.array((4, 0)),
+            np.array((7, 0))
+        ]
+
+        self._agents_color = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
+
+        self.agents = []
 
         agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
         agent_2_events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1',
@@ -181,32 +201,47 @@ class GridWorldEnv(gym.Env):
                         change[0] not in list(agent_transition_function.keys())):
                     elem[1][list(elem[1].keys())[0]] = change[2]
 
-            # print(agent_transition_function)
+            # print({k for k in agent_transition_function.keys()})
+            state = {state for state in agent_transition_function.keys()}
+            state.add('end_state')
+            # print(state)
 
             # agent_states = {k for k in agent_transition_function}
             # agent_states = {k for k in agent_events}
             # print('agent states', agent_states)
 
-            self.agent_pythomata_rm = pythomata.SimpleDFA(
-                states,
+            agent_pythomata_rm = pythomata.SimpleDFA(
+                state,
                 alphabet,
                 initial_state,
                 accepting_states,
                 agent_transition_function,
             )
 
-            agent_graph = self.agent_pythomata_rm.to_graphviz()
+            agent_graph = agent_pythomata_rm.to_graphviz()
             agent_graph.render('./images/agent_' + str(idx + 1) + '_reward_machine')
+
+            agent_automata = RewardAutomaton(agent_pythomata_rm, 1)
+            agent_temp_goal = TemporalGoal(agent_automata)
+
+            self.agents.append(Agent.Agent(
+                self._agents_location[idx],
+                self._agents_color[idx],
+                agent_temp_goal,
+            ))
+
             # print(idx)
 
         self.automata = RewardAutomaton(self.pythomata_rm, 1)
         self.state = self.automata.initial_state
-        # print(self.automata.initial_state)
-        # print(self.automata.states)
-        # print(self.automata.initial_state)
-        print(self.automata.get_reward(self.state, {'press_button_2': 'button_3'}))
-        # print(self.automata.get_successor())
-        # print(self.automata.get_transitions())
+
+        # move a TemporalGoal library
+        # temp_goal = TemporalGoal(self.pythomata_rm)
+        self.temp_goal = TemporalGoal(self.automata)
+        # print(temp_goal)
+        # print(temp_goal.current_state)
+        #
+        # print(self.agents)
 
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
@@ -258,15 +293,6 @@ class GridWorldEnv(gym.Env):
 
         # Target position
         self._target_location = np.array((9, 9))
-
-        # Agents position
-        self._agents_location = [
-            np.array((0, 0)),
-            np.array((4, 0)),
-            np.array((7, 0))
-        ]
-
-        self._agents_color = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
         self._doors_location = [
             np.array((5, 4)),
@@ -334,6 +360,9 @@ class GridWorldEnv(gym.Env):
 
     def get_reward_machine(self):
         return self.reward_machine
+
+    def get_agent_reward(self, agent_idx, signal):
+        return self.agents[agent_idx].temporal_goal.step(signal)
 
     def get_next_flag(self):
         return self.next_flag
@@ -405,6 +434,13 @@ class GridWorldEnv(gym.Env):
         # Is suppose that only one event can occur at each time
         event = None
 
+        # Check for random event during training once for step
+        if self.training and self.temp_goal.current_state != 'end_state':
+            random_uniform = random.uniform(0, 1)
+            if random_uniform > 0.98:  # 0.95:
+                event = list(self.temp_goal.automaton.get_transitions_from(self.temp_goal.current_state))[0][1]
+                print('environment event', event)
+
         opener = [0, 0, 0]
 
         for agent_idx, action in enumerate(actions):
@@ -452,6 +488,7 @@ class GridWorldEnv(gym.Env):
                 else:
                     return self._get_obs(), -1, False, False, self._get_info()
 
+            # check for open door
             elif action == 4:
 
                 for door_idx in range(len(self._doors_location)):
@@ -466,11 +503,20 @@ class GridWorldEnv(gym.Env):
 
                             # if not self.training:
                             #     print('open door')
+            if event:
+                print(event)
+                self.agents[agent_idx].temporal_goal.step(AbstractSet[event])
+                print('individual RM step')
 
+        # target location reach
         if np.array_equal(self._agents_location[0], self._target_location):
             event = self.events[-1]
 
         reward, reward_machine_idx, self.next_flag = self.reward_machine.step(event, self.training)
+
+        # TODO add the individual RM
+        if event:
+            print('event', event)
 
         # open doors by random action
         if self.training and self.next_flag and reward != 1:

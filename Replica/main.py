@@ -31,7 +31,7 @@ epsilon = 0.35
 learning_rate = 0.8  # 0.7
 gamma = 0.9  # 0.95
 
-epochs = 10000  # 100000
+epochs = 100  # 100000
 max_episode_steps = 300  # 1000  # 300
 
 # Register the environment
@@ -43,12 +43,12 @@ register(
 
 agents = ['agent_1', 'agent_2', 'agent_3']
 actions = ['up', 'right', 'down', 'left', 'push_button']
-events = ['button_1', 'button_2', 'button_3', 'target']
+events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2' 'press_button_3', 'press_target']
 
 q_tables = np.zeros((len(agents), len(events), size * size, len(actions)))
 
-test_env = gym.make('GridWorld-v0', events=events)
 train_env = gym.make('GridWorld-v0', events=events, training=True)
+test_env = gym.make('GridWorld-v0', events=events)
 
 steps_list = []
 
@@ -69,11 +69,17 @@ for epoch in tqdm.tqdm(range(epochs)):
             for elem in range(agent_idx):
                 actions.append(5)
 
-            actions.append(epsilon_greedy_policy(train_env,
-                                                 q_tables[agent_idx][train_env.get_reward_machine().get_idx()],
-                                                 state,
-                                                 epsilon,
-                                                 ))
+            # print('agent idx', agent_idx)
+            # print('reward machine idx', train_env.get_reward_machine().get_idx())
+
+            actions.append(
+                epsilon_greedy_policy(
+                    train_env,
+                    q_tables[agent_idx][train_env.get_reward_machine().get_idx()],
+                    state,
+                    epsilon,
+                )
+            )
 
             # Perform the environment step
             obs, rew, term, _, info = train_env.step(actions)

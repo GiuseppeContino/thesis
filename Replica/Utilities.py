@@ -131,38 +131,24 @@ def individual_transition_function(agent_events, initial_state, goal_state):
 
 def transition_function_to_symbolic(_transition_function, _states):
 
-    # print(_transition_function)
-
-    # automaton = pythomata.SymbolicAutomaton()
     automaton = pythomata.impl.symbolic.SymbolicDFA()
 
     state_to_idx = {elem: idx for idx, elem in enumerate(list(_states))}
-    # print(state_to_idx)
 
     automaton_state = []
 
     for _ in _states:
 
-        # print(transition_function[elem])
         automaton_state.append(automaton.create_state())
-
-    # print('# of automaton states:', len(automaton_state))
 
     for elem in _transition_function:
         for item in _transition_function[elem]:
-
-            # print('state idx of elem', state_to_idx[elem])
-            # print('item', item)
-            # print('specific transition function', _transition_function[elem][item])
-            # print('state idx of stf', state_to_idx[_transition_function[elem][item]])
 
             automaton.add_transition((
                 automaton_state[state_to_idx[elem]],
                 item,
                 automaton_state[state_to_idx[_transition_function[elem][item]]]
             ))
-
-    # print(state_to_idx['init'])
 
     automaton.set_initial_state(automaton_state[state_to_idx['init']])
     automaton.set_accepting_state(automaton_state[state_to_idx['end_state']], True)

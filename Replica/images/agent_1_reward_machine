@@ -1,12 +1,12 @@
 digraph {
 	fake [style=invisible]
 	0
-	1
+	1 [root=true]
 	2 [shape=doublecircle]
-	3 [root=true]
+	3
 	4
-	fake -> 3 [style=bold]
-	3 -> 1 [label=press_button_1]
-	1 -> 4 [label=press_button_3]
-	4 -> 2 [label=press_target]
+	fake -> 1 [style=bold]
+	1 -> 4 [label=press_button_1]
+	4 -> 3 [label=press_button_3]
+	3 -> 2 [label=press_target]
 }

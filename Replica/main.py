@@ -70,12 +70,6 @@ for epoch in tqdm.tqdm(range(epochs)):
             for elem in range(agent_idx):
                 actions.append(5)
 
-            # print('agent idx', agent_idx)
-            # print('reward machine idx', train_env.get_reward_machine().get_idx())
-
-            # print(train_env.agents[agent_idx])
-            # print(train_env.agents[agent_idx].get_state())
-
             actions.append(
                 Policy.epsilon_greedy_policy(
                     train_env,
@@ -87,7 +81,6 @@ for epoch in tqdm.tqdm(range(epochs)):
 
             # Perform the environment step
             obs, rew, term, _, info = train_env.step(actions)
-            # print('training: reward', rew)
 
             new_state = obs['agents'][agent][1] * size + obs['agents'][agent][0]
 
@@ -99,28 +92,7 @@ for epoch in tqdm.tqdm(range(epochs)):
             )
 
             if train_env.get_next_flags()[agent_idx]:
-                # print('next rm')
                 agent_states[agent_idx] += 1
-            # print(agent_state)
-
-            # if train_env.get_next_flag():  # and rew == 1:
-            #     # q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]] = rew
-            #
-            #     actual_q_value = q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]]
-            #     max_near_q_value = np.max(q_tables[agent_idx][machine_idx - 1][new_state])
-            #
-            #     q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]] = (
-            #       (1 - learning_rate) * actual_q_value + learning_rate * (rew + gamma * max_near_q_value)
-            #     )
-            #
-            # else:
-            #
-            #     actual_q_value = q_tables[agent_idx][machine_idx][state][actions[agent_idx]]
-            #     max_near_q_value = np.max(q_tables[agent_idx][machine_idx][new_state])
-            #
-            #     q_tables[agent_idx][machine_idx][state][actions[agent_idx]] = ((1 - learning_rate) * actual_q_value +
-            #                                                                    learning_rate * (rew + gamma *
-            #                                                                    max_near_q_value))
 
             if term:
                 break
@@ -145,47 +117,25 @@ for epoch in tqdm.tqdm(range(epochs)):
         # Perform the environment step
         obs, rew, term, _, info = test_env.step(actions)
 
+        # update the using agents q_tables
         for flag_idx, flag in enumerate(test_env.get_next_flags()):
             if flag:
                 agent_states[flag_idx] += 1
 
+        # check for termination
         if term:
             steps_list.append(epoch_step)
-            # print(epoch_step)
             break
 
     steps_list.append(epoch_step)
 
 np.set_printoptions(suppress=True)
 
-# agent print
-# print('q table agent 1')
-# print(q_tables[0][0])
-# print(q_tables[0][1])
-# print(q_tables[0][2])
-# print(q_tables[0][0][0 * size + 3])
-# print(q_tables[0][2][8 * size + 9])
-# print(q_tables[0][2][9 * size + 8])
-# print('q table agent 2')
-# print(q_tables[1][1])
-# print(q_tables[1][2])
-# print(q_tables[1][1][6 * size + 4])
-# print(q_tables[1][2][6 * size + 9])
-# print(q_tables[1][3][6 * size + 9])
-# print('q table agent 3')
-# print(q_tables[2][1])
-# print(q_tables[2][1][6 * size + 9])
-
-# print(len(steps_list))
-# print(steps_list[0])
-# print(steps_list[:-50])
-
 plt.plot(steps_list)
 plt.show()
 
 # show the result ( pass to a not trainer environment and to a full greedy policy )
 show_env = gym.make('GridWorld-v0', render_mode='human', events=events)
-# show_env = gym.make('GridWorld-v0', render_mode='human', events=events, training=True)
 
 # reset the environment
 obs, _ = show_env.reset()
@@ -195,6 +145,7 @@ total_step = 0
 
 agent_states = [0, 0, 0]
 
+# start the steps loop
 for step in tqdm.tqdm(range(max_episode_steps)):
 
     state_1 = obs['agents']['agent_1'][1] * size + obs['agents']['agent_1'][0]
@@ -205,23 +156,12 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
-    # print(actions)
-
     # Perform the environment step
     obs, rew, term, _, info = show_env.step(actions)
-
-    # print(term)
 
     for flag_idx, flag in enumerate(show_env.get_next_flags()):
         if flag:
             agent_states[flag_idx] += 1
-
-    # print(agent_states)
-
-    # print('agent state', agent_states, 'actions:', actions)
-    # print(actions)
-    # print(rew)
-    # print(sum(rew))
 
     total_rew += sum(rew)
     total_step += 1

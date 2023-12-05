@@ -1,27 +1,11 @@
 import gym
-import random
 import tqdm
+
+import Policy
 
 from matplotlib import pyplot as plt
 import numpy as np
 from gym.envs.registration import register
-
-
-def epsilon_greedy_policy(environment, q_table, act_state, bound):
-    random_float = random.uniform(0, 1)
-
-    if random_float > bound:
-        action = np.argmax(q_table[act_state])
-    else:
-        action = environment.action_space.sample()
-
-    return action
-
-
-def greedy_policy(q_table, act_state):
-    action = np.argmax(q_table[act_state])
-
-    return action
 
 
 size = 10
@@ -31,7 +15,7 @@ epsilon = 0.35
 learning_rate = 0.8  # 0.7
 gamma = 0.9  # 0.95
 
-epochs = 100  # 100000
+epochs = 250  # 100000
 max_episode_steps = 300  # 1000  # 300
 
 # Register the environment
@@ -43,11 +27,21 @@ register(
 
 agents = ['agent_1', 'agent_2', 'agent_3']
 actions = ['up', 'right', 'down', 'left', 'push_button']
-events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2' 'press_button_3', 'press_target']
+events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2', 'press_button_3', 'press_target']
 
-q_tables = np.zeros((len(agents), len(events), size * size, len(actions)))
+agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
+agent_2_events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1', 'press_button_3']
+agent_3_events = ['press_button_2', 'press_button_3_2', 'not_press_button_3_2', 'press_button_3']
 
+q_tables_1 = np.zeros((len(agent_1_events) + 1, size * size, len(actions)))
+q_tables_2 = np.zeros((len(agent_2_events), size * size, len(actions)))
+q_tables_3 = np.zeros((len(agent_3_events), size * size, len(actions)))
+
+q_tables = [q_tables_1, q_tables_2, q_tables_3]
+
+# train_env = gym.make('GridWorld-v0', render_mode='human', events=events, training=True)
 train_env = gym.make('GridWorld-v0', events=events, training=True)
+# test_env = gym.make('GridWorld-v0', render_mode='human', events=events)
 test_env = gym.make('GridWorld-v0', events=events)
 
 steps_list = []
@@ -55,9 +49,16 @@ steps_list = []
 # train loop for the agents
 for epoch in tqdm.tqdm(range(epochs)):
 
+    agent_states = [0, 0, 0]
+
+    # single agent train
     for agent_idx, agent in enumerate(agents):
 
         obs, _ = train_env.reset()
+
+        for agent_state in range(len(agent_states)):
+            if not agent_state == agent_idx:
+                agent_states[agent_idx] = 0
 
         for step in range(max_episode_steps):
 
@@ -72,10 +73,13 @@ for epoch in tqdm.tqdm(range(epochs)):
             # print('agent idx', agent_idx)
             # print('reward machine idx', train_env.get_reward_machine().get_idx())
 
+            # print(train_env.agents[agent_idx])
+            # print(train_env.agents[agent_idx].get_state())
+
             actions.append(
-                epsilon_greedy_policy(
+                Policy.epsilon_greedy_policy(
                     train_env,
-                    q_tables[agent_idx][train_env.get_reward_machine().get_idx()],
+                    q_tables[agent_idx][0],
                     state,
                     epsilon,
                 )
@@ -83,36 +87,49 @@ for epoch in tqdm.tqdm(range(epochs)):
 
             # Perform the environment step
             obs, rew, term, _, info = train_env.step(actions)
+            # print('training: reward', rew)
 
             new_state = obs['agents'][agent][1] * size + obs['agents'][agent][0]
 
-            machine_idx = train_env.get_reward_machine().get_idx()
+            actual_q_value = q_tables[agent_idx][agent_states[agent_idx]][state][actions[agent_idx]]
+            max_near_q_value = np.max(q_tables[agent_idx][agent_states[agent_idx]][new_state])
 
-            if train_env.get_next_flag():  # and rew == 1:
-                # q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]] = rew
+            q_tables[agent_idx][agent_states[agent_idx]][state][actions[agent_idx]] = (
+                actual_q_value + learning_rate * (rew[agent_idx] + gamma * max_near_q_value - actual_q_value)
+            )
 
-                actual_q_value = q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]]
-                max_near_q_value = np.max(q_tables[agent_idx][machine_idx - 1][new_state])
+            if train_env.get_next_flags()[agent_idx]:
+                # print('next rm')
+                agent_states[agent_idx] += 1
+            # print(agent_state)
 
-                q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]] = ((1 - learning_rate) * actual_q_value
-                                                                                   + learning_rate * (rew + gamma *
-                                                                                   max_near_q_value))
-
-            else:
-
-                actual_q_value = q_tables[agent_idx][machine_idx][state][actions[agent_idx]]
-                max_near_q_value = np.max(q_tables[agent_idx][machine_idx][new_state])
-
-                q_tables[agent_idx][machine_idx][state][actions[agent_idx]] = ((1 - learning_rate) * actual_q_value +
-                                                                               learning_rate * (rew + gamma *
-                                                                               max_near_q_value))
+            # if train_env.get_next_flag():  # and rew == 1:
+            #     # q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]] = rew
+            #
+            #     actual_q_value = q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]]
+            #     max_near_q_value = np.max(q_tables[agent_idx][machine_idx - 1][new_state])
+            #
+            #     q_tables[agent_idx][machine_idx - 1][state][actions[agent_idx]] = (
+            #       (1 - learning_rate) * actual_q_value + learning_rate * (rew + gamma * max_near_q_value)
+            #     )
+            #
+            # else:
+            #
+            #     actual_q_value = q_tables[agent_idx][machine_idx][state][actions[agent_idx]]
+            #     max_near_q_value = np.max(q_tables[agent_idx][machine_idx][new_state])
+            #
+            #     q_tables[agent_idx][machine_idx][state][actions[agent_idx]] = ((1 - learning_rate) * actual_q_value +
+            #                                                                    learning_rate * (rew + gamma *
+            #                                                                    max_near_q_value))
 
             if term:
                 break
 
     obs, _ = test_env.reset()
     epoch_step = 0
+    agent_states = [0, 0, 0]
 
+    # test policy with all agents
     for step in range(max_episode_steps):
 
         epoch_step += 1
@@ -121,37 +138,62 @@ for epoch in tqdm.tqdm(range(epochs)):
         state_2 = obs['agents']['agent_2'][1] * size + obs['agents']['agent_2'][0]
         state_3 = obs['agents']['agent_3'][1] * size + obs['agents']['agent_3'][0]
 
-        reward_machine_idx = test_env.get_reward_machine().get_idx()
-
-        actions = [greedy_policy(q_tables[0][reward_machine_idx], state_1),
-                   greedy_policy(q_tables[1][reward_machine_idx], state_2),
-                   greedy_policy(q_tables[2][reward_machine_idx], state_3)]
+        actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
+                   Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
+                   Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
         # Perform the environment step
         obs, rew, term, _, info = test_env.step(actions)
 
+        for flag_idx, flag in enumerate(test_env.get_next_flags()):
+            if flag:
+                agent_states[flag_idx] += 1
+
         if term:
+            steps_list.append(epoch_step)
+            # print(epoch_step)
             break
 
     steps_list.append(epoch_step)
 
 np.set_printoptions(suppress=True)
-print(q_tables[0][0])
 
-print(len(steps_list))
-print(steps_list[0])
-print(steps_list[:-50])
+# agent print
+# print('q table agent 1')
+# print(q_tables[0][0])
+# print(q_tables[0][1])
+# print(q_tables[0][2])
+# print(q_tables[0][0][0 * size + 3])
+# print(q_tables[0][2][8 * size + 9])
+# print(q_tables[0][2][9 * size + 8])
+# print('q table agent 2')
+# print(q_tables[1][1])
+# print(q_tables[1][2])
+# print(q_tables[1][1][6 * size + 4])
+# print(q_tables[1][2][6 * size + 9])
+# print(q_tables[1][3][6 * size + 9])
+# print('q table agent 3')
+# print(q_tables[2][1])
+# print(q_tables[2][1][6 * size + 9])
+
+# print(len(steps_list))
+# print(steps_list[0])
+# print(steps_list[:-50])
 
 plt.plot(steps_list)
 plt.show()
 
 # show the result ( pass to a not trainer environment and to a full greedy policy )
 show_env = gym.make('GridWorld-v0', render_mode='human', events=events)
+# show_env = gym.make('GridWorld-v0', render_mode='human', events=events, training=True)
 
+# reset the environment
 obs, _ = show_env.reset()
 
 total_rew = 0
 total_step = 0
+
+agent_states = [0, 0, 0]
 
 for step in tqdm.tqdm(range(max_episode_steps)):
 
@@ -159,16 +201,34 @@ for step in tqdm.tqdm(range(max_episode_steps)):
     state_2 = obs['agents']['agent_2'][1] * size + obs['agents']['agent_2'][0]
     state_3 = obs['agents']['agent_3'][1] * size + obs['agents']['agent_3'][0]
 
-    actions = [greedy_policy(q_tables[0][show_env.get_reward_machine().get_idx()], state_1),
-               greedy_policy(q_tables[1][show_env.get_reward_machine().get_idx()], state_2),
-               greedy_policy(q_tables[2][show_env.get_reward_machine().get_idx()], state_3)]
+    actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
+               Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
+               Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+
+    # print(actions)
 
     # Perform the environment step
     obs, rew, term, _, info = show_env.step(actions)
-    total_rew += rew
+
+    # print(term)
+
+    for flag_idx, flag in enumerate(show_env.get_next_flags()):
+        if flag:
+            agent_states[flag_idx] += 1
+
+    # print(agent_states)
+
+    # print('agent state', agent_states, 'actions:', actions)
+    # print(actions)
+    # print(rew)
+    # print(sum(rew))
+
+    total_rew += sum(rew)
     total_step += 1
 
     if term:
+
+        print('terminated')
         break
 
 print('accumulate reward function:', total_rew)

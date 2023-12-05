@@ -1,25 +1,25 @@
 digraph {
 	fake [style=invisible]
 	0
-	1
+	1 [root=true]
 	2
-	3 [root=true]
+	3
 	4
 	5
 	6 [shape=doublecircle]
 	7
 	8
-	fake -> 3 [style=bold]
-	4 -> 5 [label=not_press_button_3_2]
-	5 -> 2 [label=press_button_3_1]
-	2 -> 7 [label=press_button_3_2]
-	5 -> 4 [label=press_button_3_2]
-	4 -> 7 [label=press_button_3_1]
-	8 -> 5 [label=press_button_2]
-	7 -> 1 [label=press_button_3]
-	2 -> 5 [label=not_press_button_3_1]
-	7 -> 2 [label=not_press_button_3_2]
-	7 -> 4 [label=not_press_button_3_1]
-	1 -> 6 [label=press_target]
-	3 -> 8 [label=press_button_1]
+	fake -> 1 [style=bold]
+	8 -> 6 [label=press_target]
+	2 -> 8 [label=press_button_3]
+	2 -> 3 [label=not_press_button_3_2]
+	5 -> 4 [label=press_button_2]
+	2 -> 7 [label=not_press_button_3_1]
+	7 -> 4 [label=not_press_button_3_2]
+	3 -> 2 [label=press_button_3_2]
+	4 -> 3 [label=press_button_3_1]
+	4 -> 7 [label=press_button_3_2]
+	1 -> 5 [label=press_button_1]
+	7 -> 2 [label=press_button_3_1]
+	3 -> 4 [label=not_press_button_3_1]
 }

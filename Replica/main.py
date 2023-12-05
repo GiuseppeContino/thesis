@@ -33,11 +33,23 @@ agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
 agent_2_events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1', 'press_button_3']
 agent_3_events = ['press_button_2', 'press_button_3_2', 'not_press_button_3_2', 'press_button_3']
 
-q_tables_1 = np.zeros((len(agent_1_events) + 1, size * size, len(actions)))
+q_tables_1 = np.zeros((len(agent_1_events), size * size, len(actions)))
 q_tables_2 = np.zeros((len(agent_2_events), size * size, len(actions)))
 q_tables_3 = np.zeros((len(agent_3_events), size * size, len(actions)))
 
 q_tables = [q_tables_1, q_tables_2, q_tables_3]
+
+agent_1_trust = np.zeros((len(agent_1_events)))
+agent_2_trust = np.zeros((len(agent_2_events)))
+agent_3_trust = np.zeros((len(agent_3_events)))
+
+agents_trust = [agent_1_trust, agent_2_trust, agent_3_trust]
+
+agent_1_n_value = np.zeros((len(agent_1_events)))
+agent_2_n_value = np.zeros((len(agent_2_events)))
+agent_3_n_value = np.zeros((len(agent_3_events)))
+
+n_value = [agent_1_n_value, agent_2_n_value, agent_3_n_value]
 
 # train_env = gym.make('GridWorld-v0', render_mode='human', events=events, training=True)
 train_env = gym.make('GridWorld-v0', events=events, training=True)
@@ -117,6 +129,16 @@ for epoch in tqdm.tqdm(range(epochs)):
         # Perform the environment step
         obs, rew, term, _, info = test_env.step(actions)
 
+        # update the trust
+        if np.any(test_env.get_next_flags()):
+            for element_idx, element in enumerate(test_env.get_agent_transitioned()):
+                n_value[element_idx][agent_states[element_idx]] += 1
+                agents_trust[element_idx][agent_states[element_idx]] += (
+                    (element - agents_trust[element_idx][agent_states[element_idx]]) /
+                    n_value[element_idx][agent_states[element_idx]]
+                )
+            # ema = alpha * valore + (1 - alpha) * ema
+
         # update the using agents q_tables
         for flag_idx, flag in enumerate(test_env.get_next_flags()):
             if flag:
@@ -128,6 +150,8 @@ for epoch in tqdm.tqdm(range(epochs)):
             break
 
     steps_list.append(epoch_step)
+
+print('agents trust', agents_trust)
 
 np.set_printoptions(suppress=True)
 
@@ -155,6 +179,55 @@ for step in tqdm.tqdm(range(max_episode_steps)):
     actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
                Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+
+    # Perform the environment step
+    obs, rew, term, _, info = show_env.step(actions)
+
+    for flag_idx, flag in enumerate(show_env.get_next_flags()):
+        if flag:
+            agent_states[flag_idx] += 1
+
+    total_rew += sum(rew)
+    total_step += 1
+
+    if term:
+
+        print('terminated')
+        break
+
+print('accumulate reward function:', total_rew)
+print('# of steps to complete the task:', total_step)
+
+# reset the environment
+obs, _ = show_env.reset()
+
+total_rew = 0
+total_step = 0
+
+agent_states = [0, 0, 0]
+
+temp_plus = [0, 0, 0]
+
+# start the steps loop
+for step in tqdm.tqdm(range(max_episode_steps)):
+
+    state_1 = obs['agents']['agent_1'][1] * size + obs['agents']['agent_1'][0]
+    state_2 = obs['agents']['agent_2'][1] * size + obs['agents']['agent_2'][0]
+    state_3 = obs['agents']['agent_3'][1] * size + obs['agents']['agent_3'][0]
+
+    for agent_idx in range(len(agents)):
+
+        if agents_trust[agent_idx][agent_states[agent_idx]] < 0.2:
+            temp_plus[agent_idx] = 1
+        else:
+            temp_plus[agent_idx] = 0
+
+        if agent_states[agent_idx] + temp_plus[agent_idx] >= len(agents_trust[agent_idx]):
+            temp_plus[agent_idx] = 0
+
+    actions = [Policy.greedy_policy(q_tables[0][agent_states[0] + temp_plus[0]], state_1),
+               Policy.greedy_policy(q_tables[1][agent_states[1] + temp_plus[1]], state_2),
+               Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
 
     # Perform the environment step
     obs, rew, term, _, info = show_env.step(actions)

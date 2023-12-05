@@ -25,6 +25,7 @@ class GridWorldEnv(gym.Env):
         self.train_transition = 0.95
 
         self.pass_events = []
+        self.agents_transitioned = [0.0, 0.0, 0.0]
 
         self.next_flags = [False, False, False]
 
@@ -212,6 +213,9 @@ class GridWorldEnv(gym.Env):
     def get_next_flags(self):
         return self.next_flags
 
+    def get_agent_transitioned(self):
+        return self.agents_transitioned
+
     def _get_obs(self):
         return {
             'agents': {
@@ -281,18 +285,17 @@ class GridWorldEnv(gym.Env):
         self.next_flags = [False, False, False]
 
         event = []
+        self.agents_transitioned = [0.0, 0.0, 0.0]
 
         reward = [0.0, 0.0, 0.0]
 
-        opener = [0, 0, 0]
+        openers = [0, 0, 0]
 
         for agent_idx, action in enumerate(actions):
 
             # 2% random slip
             # if random.uniform(0, 1) > 0.98:
             #     action = random.randint(0, 3)
-            #     # if not self.training:
-            #     #     print('agent', agent_idx, 'slip')
 
             # Map the action (element of {0,1,2,3}) to the direction we walk in
             if action < 4:
@@ -337,30 +340,35 @@ class GridWorldEnv(gym.Env):
                 if (np.all(self.agents[agent_idx].position == self._doors_button[0]) and
                         self._doors_flag[0] == 1):
 
-                    opener[0] += 1
-                    if opener[0] >= self._doors_opener[0]:
+                    openers[0] += 1
+                    if openers[0] >= self._doors_opener[0]:
                         event = ['press_button_1']
                         self._doors_flag[0] = 0
+                        self.agents_transitioned[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._doors_button[1]) and
                         self._doors_flag[1] == 1):
 
-                    opener[1] += 1
-                    if opener[1] >= self._doors_opener[1]:
+                    openers[1] += 1
+                    if openers[1] >= self._doors_opener[1]:
                         event = ['press_button_2']
                         self._doors_flag[1] = 0
+                        self.agents_transitioned[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._doors_button[2]) and
                       self._doors_flag[2] == 1):  # and self._doors_flag[1] == 0):
 
-                    opener[2] += 1
-                    if opener[2] >= self._doors_opener[2]:
+                    openers[2] += 1
+                    if openers[2] >= self._doors_opener[2]:
                         event = ['press_button_3_1', 'press_button_3_2']
                         self._doors_flag[2] = 0
+                        self.agents_transitioned[1] = 1.0
+                        self.agents_transitioned[2] = 1.0
 
-        # target location reach
-        if np.array_equal(self.agents[0].position, self._target_location):
-            event = [self.events[-1]]
+            # target location reach
+            if np.array_equal(self.agents[agent_idx].position, self._target_location):
+                event = [self.events[-1]]
+                self.agents_transitioned[agent_idx] = 1.0
 
         environment_event = False
 

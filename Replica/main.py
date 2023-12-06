@@ -12,11 +12,11 @@ size = 10
 
 epsilon = 0.35
 
-learning_rate = 0.8  # 0.7
-gamma = 0.9  # 0.95
+learning_rate = 0.7  # 0.8  # 0.7
+gamma = 0.95  # 0.9  # 0.95
 
-epochs = 250  # 100000
-max_episode_steps = 300  # 1000  # 300
+epochs = 250  # 1000
+max_episode_steps = 300
 
 # Register the environment
 register(
@@ -57,6 +57,7 @@ train_env = gym.make('GridWorld-v0', events=events, training=True)
 test_env = gym.make('GridWorld-v0', events=events)
 
 steps_list = []
+trust_list = []
 
 # train loop for the agents
 for epoch in tqdm.tqdm(range(epochs)):
@@ -92,7 +93,8 @@ for epoch in tqdm.tqdm(range(epochs)):
             )
 
             # Perform the environment step
-            obs, rew, term, _, info = train_env.step(actions)
+            obs, rew, term, _, _ = train_env.step(actions)
+            rew = train_env.get_agent_transitioned()
 
             new_state = obs['agents'][agent][1] * size + obs['agents'][agent][0]
 
@@ -127,17 +129,27 @@ for epoch in tqdm.tqdm(range(epochs)):
                    Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
         # Perform the environment step
-        obs, rew, term, _, info = test_env.step(actions)
+        obs, rew, term, _, _ = test_env.step(actions)
 
-        # update the trust
+        # print(test_env.get_next_flags())
+        # update the trust if an event is occurred
         if np.any(test_env.get_next_flags()):
-            for element_idx, element in enumerate(test_env.get_agent_transitioned()):
-                n_value[element_idx][agent_states[element_idx]] += 1
-                agents_trust[element_idx][agent_states[element_idx]] += (
-                    (element - agents_trust[element_idx][agent_states[element_idx]]) /
-                    n_value[element_idx][agent_states[element_idx]]
-                )
-            # ema = alpha * valore + (1 - alpha) * ema
+            # for element_idx, element in enumerate(test_env.get_agent_transitioned()):
+            #     n_value[element_idx][agent_states[element_idx]] += 1
+            #     agents_trust[element_idx][agent_states[element_idx]] = (
+            #         agents_trust[element_idx][agent_states[element_idx]] +
+            #         (element - agents_trust[element_idx][agent_states[element_idx]]) /
+            #         n_value[element_idx][agent_states[element_idx]]
+            #     )
+            for agent_idx in range(len(agents)):
+                if rew[agent_idx] == 1.0:
+                    n_value[agent_idx][agent_states[agent_idx]] += 1
+                    agents_trust[agent_idx][agent_states[agent_idx]] = (
+                        agents_trust[agent_idx][agent_states[agent_idx]] +
+                        (test_env.get_agent_transitioned()[agent_idx] - agents_trust[agent_idx][agent_states[agent_idx]]) /
+                        n_value[agent_idx][agent_states[agent_idx]]
+                    )
+                # ema = alpha * valore + (1 - alpha) * ema
 
         # update the using agents q_tables
         for flag_idx, flag in enumerate(test_env.get_next_flags()):
@@ -146,17 +158,35 @@ for epoch in tqdm.tqdm(range(epochs)):
 
         # check for termination
         if term:
-            steps_list.append(epoch_step)
+            # steps_list.append(epoch_step)
             break
 
+    # update the trust for event that are not occurred
+    for agent_idx in range(len(agents)):
+        for trust_idx in range(len(agents_trust[agent_idx])):
+            if n_value[agent_idx][trust_idx] < epoch + 1:
+                n_value[agent_idx][trust_idx] += 1
+                agents_trust[agent_idx][trust_idx] = (
+                        agents_trust[agent_idx][trust_idx] +
+                        (0 - agents_trust[agent_idx][trust_idx]) /
+                        n_value[agent_idx][trust_idx]
+                )
+
     steps_list.append(epoch_step)
+    trust_list.append(agents_trust[0][0])
 
 print('agents trust', agents_trust)
+print('n values', n_value)
 
 np.set_printoptions(suppress=True)
 
 plt.plot(steps_list)
 plt.show()
+
+plt.plot(trust_list)
+plt.show()
+
+# print(q_tables[0][1])
 
 # show the result ( pass to a not trainer environment and to a full greedy policy )
 show_env = gym.make('GridWorld-v0', render_mode='human', events=events)
@@ -181,7 +211,8 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
     # Perform the environment step
-    obs, rew, term, _, info = show_env.step(actions)
+    obs, rew, term, _, _ = show_env.step(actions)
+    rew = show_env.get_agent_transitioned()
 
     for flag_idx, flag in enumerate(show_env.get_next_flags()):
         if flag:
@@ -217,6 +248,7 @@ for step in tqdm.tqdm(range(max_episode_steps)):
 
     for agent_idx in range(len(agents)):
 
+        # trust problem if not reach the threshold
         if agents_trust[agent_idx][agent_states[agent_idx]] < 0.2:
             temp_plus[agent_idx] = 1
         else:
@@ -230,7 +262,8 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
 
     # Perform the environment step
-    obs, rew, term, _, info = show_env.step(actions)
+    obs, rew, term, _, _ = show_env.step(actions)
+    rew = show_env.get_agent_transitioned()
 
     for flag_idx, flag in enumerate(show_env.get_next_flags()):
         if flag:

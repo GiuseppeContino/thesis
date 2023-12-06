@@ -293,10 +293,6 @@ class GridWorldEnv(gym.Env):
 
         for agent_idx, action in enumerate(actions):
 
-            # 2% random slip
-            # if random.uniform(0, 1) > 0.98:
-            #     action = random.randint(0, 3)
-
             # Map the action (element of {0,1,2,3}) to the direction we walk in
             if action < 4:
                 direction = self._action_to_direction[action]

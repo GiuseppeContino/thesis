@@ -93,7 +93,7 @@ for epoch in tqdm.tqdm(range(epochs)):
             )
 
             # Perform the environment step
-            obs, rew, term, _, _ = train_env.step(actions)
+            obs, _, term, _, _ = train_env.step(actions)
             rew = train_env.get_agent_transitioned()
 
             new_state = obs['agents'][agent][1] * size + obs['agents'][agent][0]
@@ -131,16 +131,8 @@ for epoch in tqdm.tqdm(range(epochs)):
         # Perform the environment step
         obs, rew, term, _, _ = test_env.step(actions)
 
-        # print(test_env.get_next_flags())
         # update the trust if an event is occurred
         if np.any(test_env.get_next_flags()):
-            # for element_idx, element in enumerate(test_env.get_agent_transitioned()):
-            #     n_value[element_idx][agent_states[element_idx]] += 1
-            #     agents_trust[element_idx][agent_states[element_idx]] = (
-            #         agents_trust[element_idx][agent_states[element_idx]] +
-            #         (element - agents_trust[element_idx][agent_states[element_idx]]) /
-            #         n_value[element_idx][agent_states[element_idx]]
-            #     )
             for agent_idx in range(len(agents)):
                 if rew[agent_idx] == 1.0:
                     n_value[agent_idx][agent_states[agent_idx]] += 1
@@ -176,7 +168,6 @@ for epoch in tqdm.tqdm(range(epochs)):
     trust_list.append(agents_trust[0][0])
 
 print('agents trust', agents_trust)
-print('n values', n_value)
 
 np.set_printoptions(suppress=True)
 
@@ -185,8 +176,6 @@ plt.show()
 
 plt.plot(trust_list)
 plt.show()
-
-# print(q_tables[0][1])
 
 # show the result ( pass to a not trainer environment and to a full greedy policy )
 show_env = gym.make('GridWorld-v0', render_mode='human', events=events)
@@ -211,7 +200,7 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
     # Perform the environment step
-    obs, rew, term, _, _ = show_env.step(actions)
+    obs, _, term, _, _ = show_env.step(actions)
     rew = show_env.get_agent_transitioned()
 
     for flag_idx, flag in enumerate(show_env.get_next_flags()):
@@ -222,8 +211,6 @@ for step in tqdm.tqdm(range(max_episode_steps)):
     total_step += 1
 
     if term:
-
-        print('terminated')
         break
 
 print('accumulate reward function:', total_rew)
@@ -262,7 +249,7 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
 
     # Perform the environment step
-    obs, rew, term, _, _ = show_env.step(actions)
+    obs, _, term, _, _ = show_env.step(actions)
     rew = show_env.get_agent_transitioned()
 
     for flag_idx, flag in enumerate(show_env.get_next_flags()):
@@ -273,8 +260,6 @@ for step in tqdm.tqdm(range(max_episode_steps)):
     total_step += 1
 
     if term:
-
-        print('terminated')
         break
 
 print('accumulate reward function:', total_rew)

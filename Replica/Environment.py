@@ -87,12 +87,6 @@ class GridWorldEnv(gym.Env):
                 agents_events[idx]
             ))
 
-        # self.automata = RewardAutomaton(self.pythomata_rm, 1)
-        # self.state = self.automata.initial_state
-        #
-        # # move a TemporalGoal library
-        # self.temp_goal = TemporalGoal(self.automata)
-
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = spaces.Dict(

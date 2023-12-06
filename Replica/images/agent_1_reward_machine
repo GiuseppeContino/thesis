@@ -3,10 +3,10 @@ digraph {
 	0
 	1 [root=true]
 	2
-	3 [shape=doublecircle]
-	4
+	3
+	4 [shape=doublecircle]
 	fake -> 1 [style=bold]
-	2 -> 3 [label=press_target]
-	4 -> 2 [label=press_button_3]
-	1 -> 4 [label=press_button_1]
+	3 -> 4 [label=press_target]
+	1 -> 2 [label=press_button_1]
+	2 -> 3 [label=press_button_3]
 }

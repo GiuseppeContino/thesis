@@ -1,7 +1,7 @@
 import random
 
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import pygame
 
 import Agent
@@ -47,7 +47,7 @@ class GridWorldEnv(gym.Env):
         # wrap it in a TemporalGoal
         self.temp_goal = TemporalGoal(automata)
 
-        # Agents initial position and colors
+        # agents initial position and colors
         agents_location = Utilities.agents_initial_location
 
         agents_color = Utilities.agents_color
@@ -91,32 +91,14 @@ class GridWorldEnv(gym.Env):
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = spaces.Dict(
             {
-                'agents': spaces.Dict({
-                    'agent_1': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                    'agent_2': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                    'agent_3': spaces.Box(0, size - 1, shape=(2,), dtype=int)
-                }),
-                'doors': spaces.Dict({
-                    'door_1': spaces.Dict({
-                        'door_position': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                        'door_button': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                        'door_opener': spaces.Discrete(3),
-                        'door_open_flag': spaces.Discrete(2)
-                    }),
-                    'door_2': spaces.Dict({
-                        'door_position': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                        'door_button': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                        'door_opener': spaces.Discrete(3),
-                        'door_open_flag': spaces.Discrete(2)
-                    }),
-                    'door_3': spaces.Dict({
-                        'door_position': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                        'door_button': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                        'door_opener': spaces.Discrete(3),
-                        'door_open_flag': spaces.Discrete(2)
-                    })
-                }),
-                'target': spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                # 'agents': spaces.Dict({
+                #     'agent_1': spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                #     'agent_2': spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                #     'agent_3': spaces.Box(0, size - 1, shape=(2,), dtype=int)
+                # }),
+                'agent_1': spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                'agent_2': spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                'agent_3': spaces.Box(0, size - 1, shape=(2,), dtype=int)
             }
         )
 
@@ -212,32 +194,14 @@ class GridWorldEnv(gym.Env):
 
     def _get_obs(self):
         return {
-            'agents': {
-                'agent_1': self.agents[0].position,
-                'agent_2': self.agents[1].position,
-                'agent_3': self.agents[2].position
-            },
-            'doors': {
-                'door_1': {
-                    'door_position': self._doors_location[0],
-                    'door_button': self._doors_button[0],
-                    'door_opener': self._doors_opener[0],
-                    'door_open_flag': self._doors_flag[0]
-                },
-                'door_2': {
-                    'door_position': self._doors_location[1],
-                    'door_button': self._doors_button[1],
-                    'door_opener': self._doors_opener[1],
-                    'door_open_flag': self._doors_flag[1]
-                },
-                'door_3': {
-                    'door_position': self._doors_location[2],
-                    'door_button': self._doors_button[2],
-                    'door_opener': self._doors_opener[2],
-                    'door_open_flag': self._doors_flag[2]
-                }
-            },
-            'target': self._target_location
+            # 'agents': {
+            #     'agent_1': self.agents[0].position,
+            #     'agent_2': self.agents[1].position,
+            #     'agent_3': self.agents[2].position
+            # },
+            'agent_1': self.agents[0].position,
+            'agent_2': self.agents[1].position,
+            'agent_3': self.agents[2].position
         }
 
     def _get_info(self):

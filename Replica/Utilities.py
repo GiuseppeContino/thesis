@@ -1,5 +1,14 @@
 import numpy as np
 import pythomata
+import Policy
+
+agents = ['agent_1', 'agent_2', 'agent_3']
+actions = ['up', 'right', 'down', 'left', 'push_button']
+events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2', 'press_button_3', 'press_target']
+
+agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
+agent_2_events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1', 'press_button_3']
+agent_3_events = ['press_button_2', 'press_button_3_2', 'not_press_button_3_2', 'press_button_3']
 
 transition_function = {
     'init': {
@@ -45,6 +54,9 @@ agents_color = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
 
 def individual_transition_function(agent_events, initial_state, goal_state):
+
+    # utilizzare deep copy
+    # copia ricorsiva del dict
 
     temp_transition_function = {
         'init': {

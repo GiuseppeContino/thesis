@@ -1,4 +1,5 @@
 import random
+import copy
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -11,7 +12,6 @@ from temprl.reward_machines.automata import RewardAutomaton
 from temprl.wrapper import TemporalGoal
 
 import numpy as np
-
 
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
@@ -64,6 +64,7 @@ class GridWorldEnv(gym.Env):
         for idx, agent_events in enumerate(agents_events):
 
             agent_transition_function = Utilities.individual_transition_function(
+                copy.deepcopy(Utilities.transition_function),
                 agents_events[idx],
                 initial_state,
                 goal_state
@@ -451,7 +452,7 @@ class GridWorldEnv(gym.Env):
             pygame.draw.circle(
                 canvas,
                 agent.color,
-                (agent.position + 0.5) * pix_square_size,
+                (np.add(agent.position, 0.5)) * pix_square_size,
                 pix_square_size / 3,
             )
 

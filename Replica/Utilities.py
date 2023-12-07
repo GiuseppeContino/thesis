@@ -1,6 +1,5 @@
 import numpy as np
 import pythomata
-import Policy
 
 agents = ['agent_1', 'agent_2', 'agent_3']
 actions = ['up', 'right', 'down', 'left', 'push_button']
@@ -53,39 +52,8 @@ agents_initial_location = [
 agents_color = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
 
-def individual_transition_function(agent_events, initial_state, goal_state):
-
-    # utilizzare deep copy
-    # copia ricorsiva del dict
-
-    temp_transition_function = {
-        'init': {
-            'press_button_1': 'door_1',
-        },
-        'door_1': {
-            'press_button_2': 'door_2',
-        },
-        'door_2': {
-            'press_button_3_1': 'door_3_1',
-            'press_button_3_2': 'door_3_2',
-        },
-        'door_3_1': {
-            'press_button_3_2': 'door_3',
-            'not_press_button_3_1': 'door_2',
-        },
-        'door_3_2': {
-            'press_button_3_1': 'door_3',
-            'not_press_button_3_2': 'door_2',
-        },
-        'door_3': {
-            'press_button_3': 'target',
-            'not_press_button_3_1': 'door_3_2',
-            'not_press_button_3_2': 'door_3_1',
-        },
-        'target': {
-            'press_target': 'end_state',
-        },
-    }
+# def individual_transition_function(agent_events, initial_state, goal_state):
+def individual_transition_function(temp_transition_function, agent_events, initial_state, goal_state):
 
     agent_transition_function = {k: temp_transition_function[k] for k in temp_transition_function.keys()}
 

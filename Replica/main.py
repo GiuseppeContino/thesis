@@ -138,11 +138,12 @@ for epoch in tqdm.tqdm(range(epochs)):
                     n_value[agent_idx][agent_states[agent_idx]] += 1
                     agents_trust[agent_idx][agent_states[agent_idx]] = (
                         agents_trust[agent_idx][agent_states[agent_idx]] +
-                        (test_env.unwrapped.get_agent_transitioned()[agent_idx] - agents_trust[agent_idx][agent_states[agent_idx]]) /
+                        (test_env.unwrapped.get_agent_transitioned()[agent_idx] -
+                         agents_trust[agent_idx][agent_states[agent_idx]]) /
                         n_value[agent_idx][agent_states[agent_idx]]
                     )
                 # TODO: change mean with exponential moving average (ema)
-                #  ema = alpha * valore + (1 - alpha) * ema
+                #  ema = alpha * value + (1 - alpha) * ema
 
         # update the using agents q_tables
         for flag_idx, flag in enumerate(test_env.unwrapped.get_next_flags()):

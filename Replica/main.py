@@ -75,6 +75,12 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
                 )
             )
 
+            # for elem in range(len(Utilities.agents) - agent_idx - 1):
+            #     actions.append(5)
+            #
+            # actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
+            # print(actions_dict)
+
             # Perform the environment step
             obs, rew, term, _, _ = train_env.step(actions)
 
@@ -116,6 +122,9 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
         actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
                    Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
                    Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+
+        # actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
+        # print(actions_dict)
 
         # Perform the environment step
         obs, rew, term, _, _ = test_env.step(actions)
@@ -194,6 +203,9 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
                Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
+    # actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
+    # print(actions_dict)
+
     # Perform the environment step
     obs, rew, term, _, _ = show_env.step(actions)
 
@@ -240,6 +252,9 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     actions = [Policy.greedy_policy(q_tables[0][agent_states[0] + temp_plus[0]], state_1),
                Policy.greedy_policy(q_tables[1][agent_states[1] + temp_plus[1]], state_2),
                Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
+
+    # actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
+    # print(actions_dict)
 
     # Perform the environment step
     obs, rew, term, _, _ = show_env.step(actions)

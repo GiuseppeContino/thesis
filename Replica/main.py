@@ -86,9 +86,7 @@ for epoch in tqdm.tqdm(range(epochs)):
             )
 
             # Perform the environment step
-            # TODO: change the reward
-            obs, _, term, _, _ = train_env.step(actions)
-            rew = train_env.unwrapped.get_agent_transitioned()
+            obs, rew, term, _, _ = train_env.step(actions)
 
             # compute the new state
             new_state = obs[agent][1] * size + obs[agent][0]
@@ -134,12 +132,11 @@ for epoch in tqdm.tqdm(range(epochs)):
         # update the trust if an event is occurred
         if np.any(test_env.unwrapped.get_next_flags()):
             for agent_idx in range(n_agents):
-                if rew[agent_idx] == 1.0:
+                if test_env.unwrapped.get_next_flags()[agent_idx]:
                     n_value[agent_idx][agent_states[agent_idx]] += 1
                     agents_trust[agent_idx][agent_states[agent_idx]] = (
                         agents_trust[agent_idx][agent_states[agent_idx]] +
-                        (test_env.unwrapped.get_agent_transitioned()[agent_idx] -
-                         agents_trust[agent_idx][agent_states[agent_idx]]) /
+                        (rew[agent_idx] - agents_trust[agent_idx][agent_states[agent_idx]]) /
                         n_value[agent_idx][agent_states[agent_idx]]
                     )
                 # TODO: change mean with exponential moving average (ema)
@@ -201,8 +198,7 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
     # Perform the environment step
-    obs, _, term, _, _ = show_env.step(actions)
-    rew = show_env.unwrapped.get_agent_transitioned()
+    obs, rew, term, _, _ = show_env.step(actions)
 
     for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
         if flag:
@@ -249,8 +245,7 @@ for step in tqdm.tqdm(range(max_episode_steps)):
                Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
 
     # Perform the environment step
-    obs, _, term, _, _ = show_env.step(actions)
-    rew = show_env.unwrapped.get_agent_transitioned()
+    obs, rew, term, _, _ = show_env.step(actions)
 
     for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
         if flag:

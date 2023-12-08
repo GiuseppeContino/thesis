@@ -2,14 +2,14 @@ digraph {
 	fake [style=invisible]
 	0
 	1
-	2 [root=true]
+	2 [shape=doublecircle]
 	3
 	4
-	5 [shape=doublecircle]
-	fake -> 2 [style=bold]
-	1 -> 5 [label=press_button_3]
-	1 -> 3 [label=not_press_button_3_1]
-	3 -> 1 [label=press_button_3_1]
-	2 -> 4 [label=press_button_1]
-	4 -> 3 [label=press_button_2]
+	5 [root=true]
+	fake -> 5 [style=bold]
+	4 -> 2 [label=press_button_3]
+	3 -> 4 [label=press_button_3_1]
+	4 -> 3 [label=not_press_button_3_1]
+	1 -> 3 [label=press_button_2]
+	5 -> 1 [label=press_button_1]
 }

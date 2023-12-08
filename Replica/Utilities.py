@@ -1,6 +1,18 @@
 import numpy as np
 import pythomata
 
+
+size = 10
+
+epsilon = 0.35
+
+learning_rate = 0.7  # 0.8  # 0.7
+gamma = 0.95  # 0.9  # 0.95
+alpha = 0.9
+
+epochs = 250  # 1000
+max_episode_steps = 300
+
 agents = ['agent_1', 'agent_2', 'agent_3']
 actions = ['up', 'right', 'down', 'left', 'push_button']
 events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2', 'press_button_3', 'press_target']

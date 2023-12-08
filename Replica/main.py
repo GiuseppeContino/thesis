@@ -9,29 +9,19 @@ import numpy as np
 from gymnasium.envs.registration import register
 
 
-size = 10
-
-epsilon = 0.35
-
-learning_rate = 0.7  # 0.8  # 0.7
-gamma = 0.95  # 0.9  # 0.95
-
-epochs = 250  # 1000
-max_episode_steps = 300
-
 # Register the environment
 register(
     id='GridWorld-v0',
     entry_point='Environment:GridWorldEnv',
-    max_episode_steps=max_episode_steps,
+    max_episode_steps=Utilities.max_episode_steps,
 )
 
 n_agents = len(Utilities.agents_color)
 
 q_tables = [
-    np.zeros((len(Utilities.agent_1_events), size * size, len(Utilities.actions))),
-    np.zeros((len(Utilities.agent_2_events), size * size, len(Utilities.actions))),
-    np.zeros((len(Utilities.agent_3_events), size * size, len(Utilities.actions)))
+    np.zeros((len(Utilities.agent_1_events), Utilities.size * Utilities.size, len(Utilities.actions))),
+    np.zeros((len(Utilities.agent_2_events), Utilities.size * Utilities.size, len(Utilities.actions))),
+    np.zeros((len(Utilities.agent_3_events), Utilities.size * Utilities.size, len(Utilities.actions)))
 ]
 
 agents_trust = [
@@ -55,7 +45,7 @@ steps_list = []
 trust_list = []
 
 # train epochs loop
-for epoch in tqdm.tqdm(range(epochs)):
+for epoch in tqdm.tqdm(range(Utilities.epochs)):
 
     # train loop for the agents
     for agent_idx, agent in enumerate(Utilities.agents):
@@ -65,10 +55,10 @@ for epoch in tqdm.tqdm(range(epochs)):
         obs, _ = train_env.reset()
 
         # single agent train
-        for step in range(max_episode_steps):
+        for step in range(Utilities.max_episode_steps):
 
             # get the old state and clean the actions array
-            state = obs[agent][1] * size + obs[agent][0]
+            state = obs[agent][1] * Utilities.size + obs[agent][0]
             actions = []
 
             # set the other agents to do nothing
@@ -81,7 +71,7 @@ for epoch in tqdm.tqdm(range(epochs)):
                     train_env,
                     q_tables[agent_idx][0],
                     state,
-                    epsilon,
+                    Utilities.epsilon,
                 )
             )
 
@@ -89,7 +79,7 @@ for epoch in tqdm.tqdm(range(epochs)):
             obs, rew, term, _, _ = train_env.step(actions)
 
             # compute the new state
-            new_state = obs[agent][1] * size + obs[agent][0]
+            new_state = obs[agent][1] * Utilities.size + obs[agent][0]
 
             # save the actual q_value and max q_value in the state for simplify the writing
             actual_q_value = q_tables[agent_idx][agent_state][state][actions[agent_idx]]
@@ -97,7 +87,8 @@ for epoch in tqdm.tqdm(range(epochs)):
 
             # update the agent q_table
             q_tables[agent_idx][agent_state][state][actions[agent_idx]] = (
-                actual_q_value + learning_rate * (rew[agent_idx] + gamma * max_near_q_value - actual_q_value)
+                actual_q_value + Utilities.learning_rate * (rew[agent_idx] +
+                Utilities.gamma * max_near_q_value - actual_q_value)
             )
 
             # move up the agent_state to the next RM state
@@ -114,13 +105,13 @@ for epoch in tqdm.tqdm(range(epochs)):
     agent_states = [0, 0, 0]
 
     # test policy with all agents
-    for step in range(max_episode_steps):
+    for step in range(Utilities.max_episode_steps):
 
         epoch_step += 1
 
-        state_1 = obs['agent_1'][1] * size + obs['agent_1'][0]
-        state_2 = obs['agent_2'][1] * size + obs['agent_2'][0]
-        state_3 = obs['agent_3'][1] * size + obs['agent_3'][0]
+        state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
+        state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
+        state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
         actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
                    Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
@@ -135,12 +126,14 @@ for epoch in tqdm.tqdm(range(epochs)):
                 if test_env.unwrapped.get_next_flags()[agent_idx]:
                     n_value[agent_idx][agent_states[agent_idx]] += 1
                     agents_trust[agent_idx][agent_states[agent_idx]] = (
-                        agents_trust[agent_idx][agent_states[agent_idx]] +
-                        (rew[agent_idx] - agents_trust[agent_idx][agent_states[agent_idx]]) /
-                        n_value[agent_idx][agent_states[agent_idx]]
+                        Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
+                        (1 - Utilities.alpha) * rew[agent_idx]
                     )
-                # TODO: change mean with exponential moving average (ema)
-                #  ema = alpha * value + (1 - alpha) * ema
+                    # agents_trust[agent_idx][agent_states[agent_idx]] = (
+                    #     agents_trust[agent_idx][agent_states[agent_idx]] +
+                    #     (rew[agent_idx] - agents_trust[agent_idx][agent_states[agent_idx]]) /
+                    #     n_value[agent_idx][agent_states[agent_idx]]
+                    # )
 
         # update the using agents q_tables
         for flag_idx, flag in enumerate(test_env.unwrapped.get_next_flags()):
@@ -156,11 +149,15 @@ for epoch in tqdm.tqdm(range(epochs)):
         for trust_idx in range(len(agents_trust[agent_idx])):
             if n_value[agent_idx][trust_idx] < epoch + 1:
                 n_value[agent_idx][trust_idx] += 1
-                agents_trust[agent_idx][trust_idx] = (
-                        agents_trust[agent_idx][trust_idx] +
-                        (0 - agents_trust[agent_idx][trust_idx]) /
-                        n_value[agent_idx][trust_idx]
+                agents_trust[agent_idx][agent_states[agent_idx]] = (
+                    Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
+                    (1 - Utilities.alpha) * 0
                 )
+                # agents_trust[agent_idx][trust_idx] = (
+                #         agents_trust[agent_idx][trust_idx] +
+                #         (0 - agents_trust[agent_idx][trust_idx]) /
+                #         n_value[agent_idx][trust_idx]
+                # )
 
     steps_list.append(epoch_step)
     trust_list.append(agents_trust[0][0])
@@ -187,11 +184,11 @@ total_step = 0
 agent_states = [0, 0, 0]
 
 # start the steps loop
-for step in tqdm.tqdm(range(max_episode_steps)):
+for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
 
-    state_1 = obs['agent_1'][1] * size + obs['agent_1'][0]
-    state_2 = obs['agent_2'][1] * size + obs['agent_2'][0]
-    state_3 = obs['agent_3'][1] * size + obs['agent_3'][0]
+    state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
+    state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
+    state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
     actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
                Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
@@ -223,11 +220,11 @@ agent_states = [0, 0, 0]
 temp_plus = [0, 0, 0]
 
 # start the steps loop
-for step in tqdm.tqdm(range(max_episode_steps)):
+for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
 
-    state_1 = obs['agent_1'][1] * size + obs['agent_1'][0]
-    state_2 = obs['agent_2'][1] * size + obs['agent_2'][0]
-    state_3 = obs['agent_3'][1] * size + obs['agent_3'][0]
+    state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
+    state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
+    state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
     for agent_idx in range(n_agents):
 

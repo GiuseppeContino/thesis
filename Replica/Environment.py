@@ -198,9 +198,9 @@ class GridWorldEnv(gym.Env):
 
     def _get_info(self):
         return {
-            'distance': [np.linalg.norm(self.agents[0].position - self._target_location, ord=1),
-                         np.linalg.norm(self.agents[1].position - self._target_location, ord=1),
-                         np.linalg.norm(self.agents[2].position - self._target_location, ord=1)]
+            'agent_1': [np.linalg.norm(self.agents[0].position - self._target_location, ord=1)],
+            'agent_2': [np.linalg.norm(self.agents[1].position - self._target_location, ord=1)],
+            'agent_3': [np.linalg.norm(self.agents[2].position - self._target_location, ord=1)]
         }
 
     def reset(self, seed=None, options=None):
@@ -357,6 +357,10 @@ class GridWorldEnv(gym.Env):
                 if self._doors_flag[door_idx] == 1 and 'press_button_' + str(door_idx + 1) in event:
                     self._doors_flag[door_idx] = 0
                     break
+
+        # # compute the reward dict
+        # reward_dict = {'agent_' + str(key + 1): value for key, value in enumerate(reward)}
+        # print(reward_dict)
 
         # An episode is done iff the agent has reached the target
         terminated = (np.array_equal(self.agents[0].position, self._target_location) or

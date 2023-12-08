@@ -367,6 +367,15 @@ class GridWorldEnv(gym.Env):
                       np.array_equal(self.agents[1].position, self._target_location) or
                       np.array_equal(self.agents[2].position, self._target_location))
 
+        # # compute the termination dict
+        # terminated = [
+        #     np.array_equal(self.agents[0].position, self._target_location),
+        #     np.array_equal(self.agents[1].position, self._target_location),
+        #     np.array_equal(self.agents[2].position, self._target_location)
+        # ]
+        # terminated_dict = {'agent_' + str(key + 1): value for key, value in enumerate(terminated)}
+        # print(terminated_dict)
+
         observation = self._get_obs()
         info = self._get_info()
 

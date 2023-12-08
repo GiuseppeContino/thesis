@@ -41,12 +41,6 @@ class GridWorldEnv(gym.Env):
         graph = pythomata_rm.to_graphviz()
         graph.render('./images/reward_machine')
 
-        # change to a reward automata
-        automata = RewardAutomaton(pythomata_rm, 1)
-
-        # wrap it in a TemporalGoal
-        self.temp_goal = TemporalGoal(automata)
-
         # agents initial position and colors
         agents_location = Utilities.agents_initial_location
 

@@ -240,7 +240,7 @@ class GridWorldEnv(gym.Env):
 
         openers = [0, 0, 0]
 
-        for agent_idx, action in enumerate(actions):
+        for agent_idx, action in enumerate(list(actions.values())):
 
             # Map the action (element of {0,1,2,3}) to the direction we walk in
             if action < 4:
@@ -358,22 +358,17 @@ class GridWorldEnv(gym.Env):
                     self._doors_flag[door_idx] = 0
                     break
 
-        # # compute the reward dict
-        # reward_dict = {'agent_' + str(key + 1): value for key, value in enumerate(reward)}
+        # compute the reward dict
+        reward_dict = {'agent_' + str(key + 1): value for key, value in enumerate(reward)}
         # print(reward_dict)
 
-        # An episode is done iff the agent has reached the target
-        terminated = (np.array_equal(self.agents[0].position, self._target_location) or
-                      np.array_equal(self.agents[1].position, self._target_location) or
-                      np.array_equal(self.agents[2].position, self._target_location))
-
-        # # compute the termination dict
-        # terminated = [
-        #     np.array_equal(self.agents[0].position, self._target_location),
-        #     np.array_equal(self.agents[1].position, self._target_location),
-        #     np.array_equal(self.agents[2].position, self._target_location)
-        # ]
-        # terminated_dict = {'agent_' + str(key + 1): value for key, value in enumerate(terminated)}
+        # compute the termination dict
+        terminated = [
+            np.array_equal(self.agents[0].position, self._target_location),
+            np.array_equal(self.agents[1].position, self._target_location),
+            np.array_equal(self.agents[2].position, self._target_location)
+        ]
+        terminated_dict = {'agent_' + str(key + 1): value for key, value in enumerate(terminated)}
         # print(terminated_dict)
 
         observation = self._get_obs()
@@ -382,7 +377,7 @@ class GridWorldEnv(gym.Env):
         if self.render_mode == 'human':
             self._render_frame()
 
-        return observation, reward, terminated, False, info
+        return observation, reward_dict, terminated_dict, False, info
 
     def render(self):
         if self.render_mode == 'rgb_array':

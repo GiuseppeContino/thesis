@@ -35,15 +35,19 @@ transition_function = {
     'door_3_1': {
         'press_button_3_2': 'door_3',
         'not_press_button_3_1': 'door_2',
+        # '~press_button_3_1': 'door_2',
     },
     'door_3_2': {
         'press_button_3_1': 'door_3',
         'not_press_button_3_2': 'door_2',
+        # '~ press_button_3_2': 'door_2',
     },
     'door_3': {
         'press_button_3': 'target',
         'not_press_button_3_1': 'door_3_2',
         'not_press_button_3_2': 'door_3_1',
+        # '~ press_button_3_1': 'door_3_2',
+        # '~ press_button_3_2': 'door_3_1',
     },
     'target': {
         'press_target': 'end_state',
@@ -52,6 +56,8 @@ transition_function = {
 
 alphabet = {'press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1', 'press_button_3_2',
             'not_press_button_3_2', 'press_button_3', 'press_target'}
+# alphabet = {'press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2', 'press_button_3',
+#             'press_target'}
 
 states = {'init', 'door_1', 'door_2', 'door_3', 'door_3_1', 'door_3_2', 'target', 'end_state'}
 
@@ -123,6 +129,8 @@ def individual_transition_function(temp_transition_function, agent_events, initi
 
 def transition_function_to_symbolic(_transition_function, _states):
 
+    # print('trans_funct', _transition_function)
+
     automaton = pythomata.impl.symbolic.SymbolicDFA()
 
     state_to_idx = {elem: idx for idx, elem in enumerate(list(_states))}
@@ -135,6 +143,11 @@ def transition_function_to_symbolic(_transition_function, _states):
 
     for elem in _transition_function:
         for item in _transition_function[elem]:
+
+            # print('elem:', elem)
+            # print('item:', item)
+            # print('aut_state', automaton_state)
+            # print('sta_2_idx', state_to_idx)
 
             automaton.add_transition((
                 automaton_state[state_to_idx[elem]],

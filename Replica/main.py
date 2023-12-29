@@ -18,6 +18,8 @@ register(
 
 n_agents = len(Utilities.agents_color)
 
+max_actions = len(Utilities.actions)
+
 q_tables = [
     np.zeros((len(Utilities.agent_1_events), Utilities.size * Utilities.size, len(Utilities.actions))),
     np.zeros((len(Utilities.agent_2_events), Utilities.size * Utilities.size, len(Utilities.actions))),
@@ -63,7 +65,7 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
 
             # set the other agents to do nothing
             for elem in range(agent_idx):
-                actions.append(5)
+                actions.append(max_actions)
 
             # compute the agent action
             actions.append(
@@ -76,7 +78,7 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
             )
 
             for elem in range(len(Utilities.agents) - agent_idx - 1):
-                actions.append(5)
+                actions.append(max_actions)
 
             actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
             # print(actions_dict)
@@ -145,7 +147,7 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
                 agent_states[flag_idx] += 1
 
         # if the episode is terminated, break the loop
-        if np.any(list(term.values())):
+        if np.all(list(term.values())):
             break
 
     # update the trust for event that are not occurred
@@ -189,9 +191,14 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
     state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
-    actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
-               Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
-               Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+    # actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
+    #            Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
+    #            Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+
+    actions = []
+    for i in range(0, 3):
+        ele = int(input())
+        actions.append(ele)
 
     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
     # print(actions_dict)
@@ -206,7 +213,7 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     total_rew += sum(list(rew.values()))
     total_step += 1
 
-    if np.any(list(term.values())):
+    if np.all(list(term.values())):
         break
 
 print('accumulate reward function:', total_rew)
@@ -257,7 +264,7 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     total_rew += sum(list(rew.values()))
     total_step += 1
 
-    if np.any(list(term.values())):
+    if np.all(list(term.values())):
         break
 
 print('accumulate reward function:', total_rew)

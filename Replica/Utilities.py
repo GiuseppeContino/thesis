@@ -10,11 +10,11 @@ learning_rate = 0.7  # 0.8  # 0.7
 gamma = 0.95  # 0.9  # 0.95
 alpha = 0.9
 
-epochs = 250  # 1000
+epochs = 1  # 250  # 1000
 max_episode_steps = 300
 
 agents = ['agent_1', 'agent_2', 'agent_3']
-actions = ['up', 'right', 'down', 'left', 'push_button']
+actions = ['up', 'right', 'down', 'left', 'push_button', 'open_pocket_door']
 events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'press_button_3_2', 'press_button_3', 'press_target']
 
 agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
@@ -64,10 +64,14 @@ states = {'init', 'door_1', 'door_2', 'door_3', 'door_3_1', 'door_3_2', 'target'
 agents_initial_location = [
     np.array((0, 0)),
     np.array((4, 0)),
-    np.array((7, 0))
+    np.array((7, 0)),
 ]
 
-agents_color = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
+agents_color = [
+    (255, 255, 0),
+    (255, 0, 255),
+    (0, 255, 255),
+]
 
 
 # def individual_transition_function(agent_events, initial_state, goal_state):

@@ -98,7 +98,7 @@ class GridWorldEnv(gym.Env):
         )
 
         # We have 5 actions, corresponding to 'right', 'up', 'left', 'down', 'push_button'
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Discrete(len(Utilities.actions))
 
         '''
         The following dictionary maps abstract actions from `self.action_space` to 
@@ -113,17 +113,22 @@ class GridWorldEnv(gym.Env):
         }
 
         # Target position
-        self._target_location = np.array((9, 9))
+        self._target_location = np.array((3, 4))
+        self._targets_location = [
+            np.array((9, 9)),
+            np.array((9, 4)),
+            np.array((3, 4)),
+        ]
 
         self._doors_location = [
             np.array((5, 4)),
             np.array((8, 4)),
-            np.array((4, 8))
+            np.array((3, 8)),
         ]
         self._doors_button = [
-            np.array((3, 0)),
+            np.array((2, 0)),
+            np.array((9, 6)),
             np.array((4, 6)),
-            np.array((9, 6))
         ]
 
         if self.training:
@@ -137,18 +142,35 @@ class GridWorldEnv(gym.Env):
 
         self._doors_color = [(127, 255, 0), (255, 0, 127), (0, 127, 255)]
 
+        self._pocket_doors_location = [
+            np.array((1, 5)),
+            np.array((4, 2)),
+            np.array((9, 1)),
+            np.array((4, 5)),
+        ]
+
+        self._pocket_doors_opener_position = [
+            np.array((1, 4)),
+            np.array((4, 1)),
+            np.array((8, 1)),
+            np.array((5, 5)),
+        ]
+
+        self._pocket_doors_flag = [1, 1, 1, 1]
+
         self._walls = (
             # First vertical wall
-            ((3, 0), (4, 0)),
-            ((3, 1), (4, 1)),
-            ((3, 2), (4, 2)),
-            ((3, 3), (4, 3)),
-            ((3, 4), (4, 4)),
-            ((3, 5), (4, 5)),
-            ((3, 6), (4, 6)),
-            ((3, 7), (4, 7)),
-            ((3, 9), (4, 9)),
+            ((2, 0), (3, 0)),
+            ((2, 1), (3, 1)),
+            ((2, 2), (3, 2)),
+            ((2, 3), (3, 3)),
+            ((2, 4), (3, 4)),
+            ((2, 5), (3, 5)),
+            ((2, 6), (3, 6)),
+            ((2, 7), (3, 7)),
+            ((2, 9), (3, 9)),
             # First horizontal wall
+            ((3, 6), (3, 7)),
             ((4, 6), (4, 7)),
             ((5, 6), (5, 7)),
             ((6, 6), (6, 7)),
@@ -156,16 +178,29 @@ class GridWorldEnv(gym.Env):
             ((8, 6), (8, 7)),
             ((9, 6), (9, 7)),
             # Second vertical wall
-            ((6, 0), (7, 0)),
-            ((6, 1), (7, 1)),
-            ((6, 2), (7, 2)),
-            ((6, 3), (7, 3)),
+            ((5, 0), (6, 0)),
+            ((5, 1), (6, 1)),
+            ((5, 2), (6, 2)),
+            ((5, 3), (6, 3)),
             # Second horizontal wall
+            ((3, 3), (3, 4)),
             ((4, 3), (4, 4)),
             ((6, 3), (6, 4)),
             ((7, 3), (7, 4)),
             ((9, 3), (9, 4)),
-
+            # Third horizontal wall
+            ((3, 1), (3, 2)),
+            ((5, 1), (5, 2)),
+            # Fourth vertical wall
+            ((8, 0), (9, 0)),
+            ((8, 2), (9, 2)),
+            ((8, 3), (9, 3)),
+            # Fifth vertical wall
+            ((4, 4), (5, 4)),
+            ((4, 6), (5, 6)),
+            # Second horizontal wall
+            ((0, 4), (0, 5)),
+            ((2, 4), (2, 5)),
         )
 
         assert render_mode is None or render_mode in self.metadata['render_modes']
@@ -220,6 +255,7 @@ class GridWorldEnv(gym.Env):
 
         # Reset the doors flag to close all them
         self._doors_flag = [1, 1, 1]
+        self._pocket_doors_flag = [1, 1, 1, 1]
         self.events_idx = 0
 
         observation = self._get_obs()
@@ -250,6 +286,10 @@ class GridWorldEnv(gym.Env):
 
                 for door, door_flag in zip(self._doors_location, self._doors_flag):
                     if np.all(self.agents[agent_idx].position + direction == door) and door_flag == 1:
+                        collision = True
+
+                for pocket_door, pocket_door_flag in zip(self._pocket_doors_location, self._pocket_doors_flag):
+                    if np.all(self.agents[agent_idx].position + direction == pocket_door) and pocket_door_flag == 1:
                         collision = True
 
                 for wall in self._walls:
@@ -310,10 +350,54 @@ class GridWorldEnv(gym.Env):
                         reward[1] = 1.0
                         reward[2] = 1.0
 
+            elif action == 5:
+
+                if (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[0]) and
+                        self._pocket_doors_flag[0] == 1):
+
+                    event = ['open_pocket_door_1']
+                    self._pocket_doors_flag[0] = 0
+                    reward[agent_idx] = 1.0
+
+                elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[1]) and
+                        self._pocket_doors_flag[1] == 1):
+
+                    event = ['open_pocket_door_2']
+                    self._pocket_doors_flag[1] = 0
+                    reward[agent_idx] = 1.0
+
+                elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[2]) and
+                        self._pocket_doors_flag[2] == 1):
+
+                    event = ['open_pocket_door_3']
+                    self._pocket_doors_flag[2] = 0
+                    reward[agent_idx] = 1.0
+
+                elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[3]) and
+                        self._pocket_doors_flag[3] == 1):
+
+                    event = ['open_pocket_door_4']
+                    self._pocket_doors_flag[3] = 0
+                    reward[agent_idx] = 1.0
+
+            agent_on_target = []
+
             # target location reach
-            if np.array_equal(self.agents[agent_idx].position, self._target_location):
-                event = [self.events[-1]]
+            for target_location in self._targets_location:
+                if self.training and np.array_equal(self.agents[agent_idx].position, target_location):
+                    # event = ['press_target']
+                    reward[agent_idx] = 1.0
+
+                elif np.array_equal(self.agents[agent_idx].position, target_location):
+                    if target_location not in agent_on_target:
+                        agent_on_target.append(agent_idx)
+
+            if len(agent_on_target) == len(self.agents):
+                event = ['press_target']
                 reward[agent_idx] = 1.0
+
+        if event and not self.training:
+            print(event)
 
         # if event are None create a random event during training once for step
         if self.training and not event and self.events_idx != len(self.events) - 1:
@@ -364,9 +448,15 @@ class GridWorldEnv(gym.Env):
 
         # compute the termination dict
         terminated = [
-            np.array_equal(self.agents[0].position, self._target_location),
-            np.array_equal(self.agents[1].position, self._target_location),
-            np.array_equal(self.agents[2].position, self._target_location)
+            (np.array_equal(self.agents[0].position, self._targets_location[0]) or
+             np.array_equal(self.agents[0].position, self._targets_location[1]) or
+             np.array_equal(self.agents[0].position, self._targets_location[2])),
+            (np.array_equal(self.agents[1].position, self._targets_location[0]) or
+             np.array_equal(self.agents[1].position, self._targets_location[1]) or
+             np.array_equal(self.agents[1].position, self._targets_location[2])),
+            (np.array_equal(self.agents[2].position, self._targets_location[0]) or
+             np.array_equal(self.agents[2].position, self._targets_location[1]) or
+             np.array_equal(self.agents[2].position, self._targets_location[2]))
         ]
         terminated_dict = {'agent_' + str(key + 1): value for key, value in enumerate(terminated)}
         # print(terminated_dict)
@@ -398,14 +488,15 @@ class GridWorldEnv(gym.Env):
         )  # The size of a single grid square in pixels
 
         # Draw the target
-        pygame.draw.rect(
-            canvas,
-            (255, 0, 0),
-            pygame.Rect(
-                pix_square_size * self._target_location,
-                (pix_square_size, pix_square_size),
-            ),
-        )
+        for target_location in self._targets_location:
+            pygame.draw.rect(
+                canvas,
+                (255, 0, 0),
+                pygame.Rect(
+                    pix_square_size * target_location,
+                    (pix_square_size, pix_square_size),
+                ),
+            )
 
         # Draw the doors and the buttons
         for door_idx, door_color in zip(range(len(self._doors_location)), self._doors_color):
@@ -432,6 +523,23 @@ class GridWorldEnv(gym.Env):
                     pix_square_size * self._doors_button[door_idx] + [int(pix_square_size / 4),
                                                                       int(pix_square_size / 4)],
                     (int(pix_square_size / 2), int(pix_square_size / 2)),
+                ),
+            )
+
+        for door_idx, door in enumerate(self._pocket_doors_location):
+
+            door_color = (255, 127, 0)
+
+            if self._pocket_doors_flag[door_idx] == 0:
+                door_color = (200, 200, 200)
+
+            # Draw the doors
+            pygame.draw.rect(
+                canvas,
+                door_color,
+                pygame.Rect(
+                    pix_square_size * door,
+                    (pix_square_size, pix_square_size),
                 ),
             )
 

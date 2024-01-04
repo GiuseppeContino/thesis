@@ -48,26 +48,32 @@ class GridWorldEnv(gym.Env):
 
         self.agents = []
 
-        agent_1_events = ['press_button_1', 'press_button_3', 'press_target']
-        agent_2_events = ['press_button_1', 'press_button_2', 'press_button_3_1', 'not_press_button_3_1',
-                          'press_button_3']
-        agent_3_events = ['press_button_2', 'press_button_3_2', 'not_press_button_3_2', 'press_button_3']
+        # agent_1_events = Utilities.agent_1_events
+        # agent_2_events = Utilities.agent_2_events
+        # agent_3_events = Utilities.agent_3_events
 
-        agents_events = [agent_1_events, agent_2_events, agent_3_events]
+        agents_events = [Utilities.agent_1_events, Utilities.agent_2_events, Utilities.agent_3_events]
 
         for idx, agent_events in enumerate(agents_events):
 
-            agent_transition_function = Utilities.individual_transition_function(
-                copy.deepcopy(Utilities.transition_function),
-                agents_events[idx],
-                initial_state,
-                goal_state
-            )
+            # agent_transition_function = Utilities.individual_transition_function(
+            #     copy.deepcopy(Utilities.transition_function),
+            #     agents_events[idx],
+            #     initial_state,
+            #     goal_state
+            # )
+            #
+            # agent_states = {state for state in agent_transition_function.keys()}
+            # agent_states.add('end_state')
+            #
+            # agent_pythomata_rm, _ = Utilities.transition_function_to_symbolic(agent_transition_function, agent_states)
 
-            agent_states = {state for state in agent_transition_function.keys()}
-            agent_states.add('end_state')
-
-            agent_pythomata_rm, _ = Utilities.transition_function_to_symbolic(agent_transition_function, agent_states)
+            if idx == 0:
+                agent_pythomata_rm = Utilities.create_first_individual_rm()
+            elif idx == 1:
+                agent_pythomata_rm = Utilities.create_second_individual_rm()
+            elif idx == 2:
+                agent_pythomata_rm = Utilities.create_third_individual_rm()
 
             agent_graph = agent_pythomata_rm.to_graphviz()
             agent_graph.render('./images/agent_' + str(idx + 1) + '_reward_machine')
@@ -134,7 +140,7 @@ class GridWorldEnv(gym.Env):
         if self.training:
             self._doors_opener = [1, 1, 1]
         else:
-            self._doors_opener = [1, 1, 2]
+            self._doors_opener = [1, 1, 1]
 
         self.events_idx = 0
 
@@ -327,7 +333,7 @@ class GridWorldEnv(gym.Env):
 
                     openers[0] += 1
                     if openers[0] >= self._doors_opener[0]:
-                        event = ['press_button_1']
+                        event.append('open_green_door')
                         self._doors_flag[0] = 0
                         reward[agent_idx] = 1.0
 
@@ -336,7 +342,7 @@ class GridWorldEnv(gym.Env):
 
                     openers[1] += 1
                     if openers[1] >= self._doors_opener[1]:
-                        event = ['press_button_2']
+                        event.append('open_magenta_door')
                         self._doors_flag[1] = 0
                         reward[agent_idx] = 1.0
 
@@ -345,7 +351,7 @@ class GridWorldEnv(gym.Env):
 
                     openers[2] += 1
                     if openers[2] >= self._doors_opener[2]:
-                        event = ['press_button_3_1', 'press_button_3_2']
+                        event.append('open_blue_door')
                         self._doors_flag[2] = 0
                         reward[1] = 1.0
                         reward[2] = 1.0
@@ -355,28 +361,28 @@ class GridWorldEnv(gym.Env):
                 if (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[0]) and
                         self._pocket_doors_flag[0] == 1):
 
-                    event = ['open_pocket_door_1']
+                    event.append('open_pocket_door_1')
                     self._pocket_doors_flag[0] = 0
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[1]) and
                         self._pocket_doors_flag[1] == 1):
 
-                    event = ['open_pocket_door_2']
+                    event.append('open_pocket_door_2')
                     self._pocket_doors_flag[1] = 0
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[2]) and
                         self._pocket_doors_flag[2] == 1):
 
-                    event = ['open_pocket_door_3']
+                    event.append('open_pocket_door_3')
                     self._pocket_doors_flag[2] = 0
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[3]) and
                         self._pocket_doors_flag[3] == 1):
 
-                    event = ['open_pocket_door_4']
+                    event.append('open_pocket_door_4')
                     self._pocket_doors_flag[3] = 0
                     reward[agent_idx] = 1.0
 
@@ -393,10 +399,10 @@ class GridWorldEnv(gym.Env):
                         agent_on_target.append(agent_idx)
 
             if len(agent_on_target) == len(self.agents):
-                event = ['press_target']
+                event.append('press_target')
                 reward[agent_idx] = 1.0
 
-        if event and not self.training:
+        if event and self.render_mode == 'human':
             print(event)
 
         # if event are None create a random event during training once for step
@@ -405,14 +411,14 @@ class GridWorldEnv(gym.Env):
             if random_uniform > self.train_transition:
                 event = [self.events[self.events_idx]]
 
-        # if both agent press the button press the button
-        if (
-            not event and
-            'press_button_3_1' in self.pass_events and
-            'press_button_3_2' in self.pass_events and
-            'press_button_3' not in self.pass_events
-        ):
-            event = ['press_button_3']
+        # # if both agent press the button press the button
+        # if (
+        #     not event and
+        #     'press_button_3_1' in self.pass_events and
+        #     'press_button_3_2' in self.pass_events and
+        #     'press_button_3' not in self.pass_events
+        # ):
+        #     event = ['press_button_3']
 
         if event and self.events[self.events_idx] in event:
 
@@ -427,7 +433,15 @@ class GridWorldEnv(gym.Env):
 
                 if common_events and common_events[0] not in self.pass_events:
 
+                    # if not self.training:
+                    #     print(agent_idx, common_events)
+
                     agent.temporal_goal.step(common_events)
+
+                    if self.render_mode == 'human':
+                        print(agent.temporal_goal.current_state)
+                        # self.next_flags[agent_idx] = agent.temporal_goal.current_state
+
                     self.next_flags[agent_idx] = True
 
             # update the pass event
@@ -438,7 +452,15 @@ class GridWorldEnv(gym.Env):
         # open doors by event
         if self.training:
             for door_idx in range(len(self._doors_location)):
-                if self._doors_flag[door_idx] == 1 and 'press_button_' + str(door_idx + 1) in event:
+
+                if door_idx == 0:
+                    temp_event = 'open_green_door'
+                elif door_idx == 1:
+                    temp_event = 'open_magenta_door'
+                elif door_idx == 2:
+                    temp_event = 'open_blue_door'
+
+                if self._doors_flag[door_idx] == 1 and temp_event in event:
                     self._doors_flag[door_idx] = 0
                     break
 

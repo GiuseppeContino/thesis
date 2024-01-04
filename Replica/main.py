@@ -21,9 +21,9 @@ n_agents = len(Utilities.agents_color)
 max_actions = len(Utilities.actions)
 
 q_tables = [
-    np.zeros((len(Utilities.agent_1_events), Utilities.size * Utilities.size, len(Utilities.actions))),
-    np.zeros((len(Utilities.agent_2_events), Utilities.size * Utilities.size, len(Utilities.actions))),
-    np.zeros((len(Utilities.agent_3_events), Utilities.size * Utilities.size, len(Utilities.actions)))
+    np.zeros((7, Utilities.size * Utilities.size, len(Utilities.actions))),
+    np.zeros((9, Utilities.size * Utilities.size, len(Utilities.actions))),
+    np.zeros((12, Utilities.size * Utilities.size, len(Utilities.actions)))
 ]
 
 agents_trust = [
@@ -176,6 +176,11 @@ plt.show()
 # show the result (pass to a not trainer environment and to a full greedy policy)
 show_env = gym.make('GridWorld-v0', render_mode='human', events=Utilities.events)
 
+print(q_tables[0].shape)
+print(q_tables[1].shape)
+print(q_tables[2].shape)
+print(q_tables[0][0])
+
 # set the value for show after the training without the trust
 obs, _ = show_env.reset()
 
@@ -187,24 +192,28 @@ agent_states = [0, 0, 0]
 # start the steps loop
 for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
 
+    print(agent_states)
+
     state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
     state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
     state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
-    # actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
-    #            Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
-    #            Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+    actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
+               Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
+               Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
-    actions = []
-    for i in range(0, 3):
-        ele = int(input())
-        actions.append(ele)
+    # actions = []
+    # for i in range(0, 3):
+    #     ele = int(input())
+    #     actions.append(ele)
 
     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
     # print(actions_dict)
 
     # Perform the environment step
     obs, rew, term, _, _ = show_env.step(actions_dict)
+
+    print(rew)
 
     for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
         if flag:

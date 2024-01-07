@@ -16,6 +16,12 @@ register(
     max_episode_steps=Utilities.max_episode_steps,
 )
 
+agents_pythomata_rm = [
+    Utilities.create_first_individual_rm(),
+    Utilities.create_second_individual_rm(),
+    Utilities.create_third_individual_rm()
+]
+
 n_agents = len(Utilities.agents_color)
 
 max_actions = len(Utilities.actions)
@@ -38,10 +44,11 @@ n_value = [
     np.zeros((len(Utilities.agent_3_events)))
 ]
 
-# train_env = gym.make('GridWorld-v0', render_mode='human', events=events, training=True)
-train_env = gym.make('GridWorld-v0', events=Utilities.events, training=True)
+# train_env = gym.make('GridWorld-v0', render_mode='human', events=Utilities.events, training=True,
+#   rewarding_machines=agents_pythomata_rm)
+train_env = gym.make('GridWorld-v0', events=Utilities.events, training=True, rewarding_machines=agents_pythomata_rm)
 # test_env = gym.make('GridWorld-v0', render_mode='human', events=events)
-test_env = gym.make('GridWorld-v0', events=Utilities.events)
+test_env = gym.make('GridWorld-v0', events=Utilities.events, rewarding_machines=agents_pythomata_rm)
 
 steps_list = []
 trust_list = []
@@ -53,8 +60,8 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
     for agent_idx, agent in enumerate(Utilities.agents):
 
         # reset the environment for the single agent training
-        agent_state = 0
         obs, _ = train_env.reset()
+        agent_state = train_env.unwrapped.get_next_flags()[agent_idx]
 
         # single agent train
         for step in range(Utilities.max_episode_steps):
@@ -94,14 +101,18 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
             max_near_q_value = np.max(q_tables[agent_idx][agent_state][new_state])
 
             # update the agent q_table
-            q_tables[agent_idx][agent_state][state][actions[agent_idx]] = (
+            q_tables[agent_idx][agent_state][state][actions[agent_idx]] = min((
                 actual_q_value + Utilities.learning_rate * (rew['agent_' + str(agent_idx + 1)] +
-                Utilities.gamma * max_near_q_value - actual_q_value)
-            )
+                                                            Utilities.gamma * max_near_q_value - actual_q_value)
+            ), 1)
+
+            # if agent_idx == 0 and agent_state == 0:
+            #     print(state, new_state, actions, rew)
 
             # move up the agent_state to the next RM state
-            if train_env.unwrapped.get_next_flags()[agent_idx]:
-                agent_state += 1
+            # if train_env.unwrapped.get_next_flags()[agent_idx]:
+            #     agent_state += 1
+            agent_state = train_env.unwrapped.get_next_flags()[agent_idx]
 
             # if the episode is terminated, break the loop
             if np.any(list(term.values())):
@@ -110,7 +121,8 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
     # set the value for the evaluation after the training step
     obs, _ = test_env.reset()
     epoch_step = 0
-    agent_states = [0, 0, 0]
+    # agent_states = [0, 0, 0]
+    agent_states = train_env.get_next_flags()
 
     # test policy with all agents
     for step in range(Utilities.max_episode_steps):
@@ -131,55 +143,59 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
         # Perform the environment step
         obs, rew, term, _, _ = test_env.step(actions_dict)
 
-        # update the trust if an event is occurred
-        if np.any(test_env.unwrapped.get_next_flags()):
-            for agent_idx in range(n_agents):
-                if test_env.unwrapped.get_next_flags()[agent_idx]:
-                    n_value[agent_idx][agent_states[agent_idx]] += 1
-                    agents_trust[agent_idx][agent_states[agent_idx]] = (
-                        Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
-                        (1 - Utilities.alpha) * rew['agent_' + str(agent_idx + 1)]
-                    )
+        # # update the trust if an event is occurred
+        # if np.any(test_env.unwrapped.get_next_flags()):
+        #     for agent_idx in range(n_agents):
+        #         if test_env.unwrapped.get_next_flags()[agent_idx]:
+        #             n_value[agent_idx][agent_states[agent_idx]] += 1
+        #             agents_trust[agent_idx][agent_states[agent_idx]] = (
+        #                 Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
+        #                 (1 - Utilities.alpha) * rew['agent_' + str(agent_idx + 1)]
+        #             )
 
         # update the using agents q_tables
-        for flag_idx, flag in enumerate(test_env.unwrapped.get_next_flags()):
-            if flag:
-                agent_states[flag_idx] += 1
+        # for flag_idx, flag in enumerate(test_env.unwrapped.get_next_flags()):
+        #     if flag:
+        #         agent_states[flag_idx] += 1
+        agent_states = train_env.unwrapped.get_next_flags()
 
         # if the episode is terminated, break the loop
         if np.all(list(term.values())):
             break
 
-    # update the trust for event that are not occurred
-    for agent_idx in range(n_agents):
-        for trust_idx in range(len(agents_trust[agent_idx])):
-            if n_value[agent_idx][trust_idx] < epoch + 1:
-                n_value[agent_idx][trust_idx] += 1
-                agents_trust[agent_idx][agent_states[agent_idx]] = (
-                    Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
-                    (1 - Utilities.alpha) * 0
-                )
+    # # update the trust for event that are not occurred
+    # for agent_idx in range(n_agents):
+    #     for trust_idx in range(len(agents_trust[agent_idx])):
+    #         if n_value[agent_idx][trust_idx] < epoch + 1:
+    #             n_value[agent_idx][trust_idx] += 1
+    #             agents_trust[agent_idx][agent_states[agent_idx]] = (
+    #                 Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
+    #                 (1 - Utilities.alpha) * 0
+    #             )
 
     steps_list.append(epoch_step)
     trust_list.append(agents_trust[0][2])
 
-print('agents trust', agents_trust)
+# print('agents trust', agents_trust)
 
 # plot the # of step during evaluation
 plt.plot(steps_list)
 plt.show()
 
-# plot the trust of agent_1 respect the press_button_1 event over time
-plt.plot(trust_list)
-plt.show()
+# # plot the trust of agent_1 respect the press_button_1 event over time
+# plt.plot(trust_list)
+# plt.show()
 
 # show the result (pass to a not trainer environment and to a full greedy policy)
-show_env = gym.make('GridWorld-v0', render_mode='human', events=Utilities.events)
+show_env = gym.make('GridWorld-v0', render_mode='human', events=Utilities.events, rewarding_machines=agents_pythomata_rm)
 
-print(q_tables[0].shape)
-print(q_tables[1].shape)
-print(q_tables[2].shape)
-print(q_tables[0][0])
+# print(q_tables[0][0])
+# print(q_tables[0][3])
+# print(q_tables[0][4])
+# print('#' * 20)
+# print(q_tables[1][5])
+# print('#' * 20)
+# print(q_tables[2][6])
 
 # set the value for show after the training without the trust
 obs, _ = show_env.reset()
@@ -187,12 +203,11 @@ obs, _ = show_env.reset()
 total_rew = 0
 total_step = 0
 
-agent_states = [0, 0, 0]
+# agent_states = [0, 0, 0]
+agent_states = train_env.unwrapped.get_next_flags()
 
 # start the steps loop
 for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
-
-    print(agent_states)
 
     state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
     state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
@@ -215,9 +230,11 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
 
     print(rew)
 
-    for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
-        if flag:
-            agent_states[flag_idx] += 1
+    # for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
+    #     if flag:
+    #         agent_states[flag_idx] += 1
+    agent_states = show_env.unwrapped.get_next_flags()
+    print(agent_states)
 
     total_rew += sum(list(rew.values()))
     total_step += 1

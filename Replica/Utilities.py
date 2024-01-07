@@ -10,19 +10,19 @@ learning_rate = 0.7  # 0.8  # 0.7
 gamma = 0.95  # 0.9  # 0.95
 alpha = 0.9
 
-epochs = 250  # 1000
-max_episode_steps = 300
+epochs = 300  # 1000
+max_episode_steps = 500
 
 agents = ['agent_1', 'agent_2', 'agent_3']
 actions = ['up', 'right', 'down', 'left', 'push_button', 'open_pocket_door']
-events = ['open_green_door', 'open_pocket_door_2', 'open_magenta_door', 'open_pocket_door_4', 'open_blue_door',
-          'open_pocket_door_1', 'press_target']
+events = ['open_green_door', 'open_pocket_door_1', 'open_pocket_door_2', 'open_magenta_door', 'open_pocket_door_4',
+          'open_blue_door']  # , 'press_target']
 
-agent_1_events = ['open_green_door', 'open_pocket_door_1', 'open_blue_door', 'press_target']
+agent_1_events = ['open_green_door', 'open_pocket_door_1', 'open_blue_door', 'press_target_1']
 agent_2_events = ['open_green_door', 'open_pocket_door_2', 'open_magenta_door', 'open_pocket_door_4',
-                  'open_blue_door', 'press_target']
+                  'open_blue_door', 'press_target_2']
 agent_3_events = ['open_magenta_door', 'open_pocket_door_3', 'open_pocket_door_4', 'open_blue_door',
-                  'press_target']
+                  'press_target_3']
 
 transition_function = {
     'init': {
@@ -95,7 +95,7 @@ def create_first_individual_rm():
     automaton.add_transition((state_0, "open_green_door", state_1))
     automaton.add_transition((state_0, "open_pocket_door_1", state_2))
 
-    automaton.add_transition((state_1, "open_blue_door", state_4))
+    automaton.add_transition((state_1, "open_blue_door & ~ open_pocket_door_1", state_4))
     automaton.add_transition((state_4, "open_pocket_door_1", state_5))
 
     automaton.add_transition((state_1, "open_pocket_door_1", state_3))
@@ -105,7 +105,7 @@ def create_first_individual_rm():
 
     automaton.add_transition((state_1, "open_pocket_door_1 & open_blue_door", state_5))
 
-    automaton.add_transition((state_5, "press_target", state_6))
+    automaton.add_transition((state_5, "press_target_1", state_6))
 
     return automaton
 
@@ -122,17 +122,15 @@ def create_second_individual_rm():
     state_5 = automaton.create_state()
     state_6 = automaton.create_state()
     state_7 = automaton.create_state()
-    state_8 = automaton.create_state()
 
     automaton.set_initial_state(state_0)
     automaton.set_accepting_state(state_7, True)
-    automaton.set_accepting_state(state_8, True)
 
     automaton.add_transition((state_0, "open_pocket_door_2 & ~ open_green_door", state_1))
     automaton.add_transition((state_0, "open_green_door & ~ open_pocket_door_2", state_2))
 
-    automaton.add_transition((state_1, "open_green_door & ~ open_pocket_door_2", state_3))
-    automaton.add_transition((state_2, "open_pocket_door_2 & ~ open_green_door", state_3))
+    automaton.add_transition((state_1, "open_green_door", state_3))
+    automaton.add_transition((state_2, "open_pocket_door_2", state_3))
 
     automaton.add_transition((state_0, "open_green_door & open_pocket_door_2", state_3))
 
@@ -141,8 +139,7 @@ def create_second_individual_rm():
     automaton.add_transition((state_4, "open_pocket_door_4", state_5))
     automaton.add_transition((state_5, "open_blue_door", state_6))
 
-    automaton.add_transition((state_6, "press_target", state_7))
-    automaton.add_transition((state_4, "press_target", state_8))
+    automaton.add_transition((state_6, "press_target_2", state_7))
 
     return automaton
 
@@ -161,17 +158,13 @@ def create_third_individual_rm():
     state_7 = automaton.create_state()
     state_8 = automaton.create_state()
     state_9 = automaton.create_state()
-    state_10 = automaton.create_state()
-    state_11 = automaton.create_state()
 
     automaton.set_initial_state(state_0)
     automaton.set_accepting_state(state_8, True)
     automaton.set_accepting_state(state_9, True)
-    automaton.set_accepting_state(state_10, True)
-    automaton.set_accepting_state(state_11, True)
 
-    automaton.add_transition((state_0, "open_pocket_door_3", state_1))
-    automaton.add_transition((state_0, "open_magenta_door", state_2))
+    automaton.add_transition((state_0, "open_pocket_door_3 & ~ open_magenta_door", state_1))
+    automaton.add_transition((state_0, "open_magenta_door & ~ open_pocket_door_3", state_2))
 
     automaton.add_transition((state_1, "open_magenta_door", state_3))
     automaton.add_transition((state_2, "open_pocket_door_3", state_3))
@@ -184,10 +177,8 @@ def create_third_individual_rm():
     automaton.add_transition((state_2, "open_pocket_door_4", state_4))
     automaton.add_transition((state_4, "open_blue_door", state_5))
 
-    automaton.add_transition((state_2, "press_target", state_8))
-    automaton.add_transition((state_5, "press_target", state_9))
-    automaton.add_transition((state_3, "press_target", state_10))
-    automaton.add_transition((state_7, "press_target", state_11))
+    automaton.add_transition((state_5, "press_target_3", state_8))
+    automaton.add_transition((state_7, "press_target_3", state_9))
 
     return automaton
 

@@ -350,17 +350,17 @@ class GridWorldEnv(gym.Env):
         # from the event to the correlated action
         if 'open_green_door' in event:
             self._doors_flag[0] = 0
-        elif 'open_magenta_door' in event:
+        if 'open_magenta_door' in event:
             self._doors_flag[1] = 0
-        elif 'open_blue_door' in event:
+        if 'open_blue_door' in event:
             self._doors_flag[2] = 0
-        elif 'open_pocket_door_1' in event:
+        if 'open_pocket_door_1' in event:
             self._pocket_doors_flag[0] = 0
-        elif 'open_pocket_door_2' in event:
+        if 'open_pocket_door_2' in event:
             self._pocket_doors_flag[1] = 0
-        elif 'open_pocket_door_3' in event:
+        if 'open_pocket_door_3' in event:
             self._pocket_doors_flag[2] = 0
-        elif 'open_pocket_door_4' in event:
+        if 'open_pocket_door_4' in event:
             self._pocket_doors_flag[3] = 0
 
         if event and self.render_mode == 'human':

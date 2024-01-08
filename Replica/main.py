@@ -88,7 +88,6 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
                 actions.append(max_actions)
 
             actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
-            # print(actions_dict)
 
             # Perform the environment step
             obs, rew, term, _, _ = train_env.step(actions_dict)
@@ -106,96 +105,55 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
                                                             Utilities.gamma * max_near_q_value - actual_q_value)
             ), 1)
 
-            # if agent_idx == 0 and agent_state == 0:
-            #     print(state, new_state, actions, rew)
-
             # move up the agent_state to the next RM state
-            # if train_env.unwrapped.get_next_flags()[agent_idx]:
-            #     agent_state += 1
             agent_state = train_env.unwrapped.get_next_flags()[agent_idx]
 
             # if the episode is terminated, break the loop
             if np.any(list(term.values())):
                 break
 
-    # set the value for the evaluation after the training step
-    obs, _ = test_env.reset()
-    epoch_step = 0
-    # agent_states = [0, 0, 0]
-    agent_states = train_env.get_next_flags()
+    # test training every test_num value
+    if epoch % Utilities.test_num == 0:
 
-    # test policy with all agents
-    for step in range(Utilities.max_episode_steps):
+        # set the value for the evaluation after the training step
+        obs, _ = test_env.reset()
+        epoch_step = 0
 
-        epoch_step += 1
+        agent_states = test_env.get_next_flags()
 
-        state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
-        state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
-        state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
+        # test policy with all agents
+        for step in range(Utilities.max_episode_steps):
 
-        actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
-                   Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
-                   Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
+            epoch_step += 1
 
-        actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
-        # print(actions_dict)
+            state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
+            state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
+            state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
-        # Perform the environment step
-        obs, rew, term, _, _ = test_env.step(actions_dict)
+            actions = [Policy.greedy_policy(q_tables[0][agent_states[0]], state_1),
+                       Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
+                       Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
-        # # update the trust if an event is occurred
-        # if np.any(test_env.unwrapped.get_next_flags()):
-        #     for agent_idx in range(n_agents):
-        #         if test_env.unwrapped.get_next_flags()[agent_idx]:
-        #             n_value[agent_idx][agent_states[agent_idx]] += 1
-        #             agents_trust[agent_idx][agent_states[agent_idx]] = (
-        #                 Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
-        #                 (1 - Utilities.alpha) * rew['agent_' + str(agent_idx + 1)]
-        #             )
+            actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
 
-        # update the using agents q_tables
-        # for flag_idx, flag in enumerate(test_env.unwrapped.get_next_flags()):
-        #     if flag:
-        #         agent_states[flag_idx] += 1
-        agent_states = train_env.unwrapped.get_next_flags()
+            # Perform the environment step
+            obs, rew, term, _, _ = test_env.step(actions_dict)
 
-        # if the episode is terminated, break the loop
-        if np.all(list(term.values())):
-            break
+            agent_states = test_env.unwrapped.get_next_flags()
 
-    # # update the trust for event that are not occurred
-    # for agent_idx in range(n_agents):
-    #     for trust_idx in range(len(agents_trust[agent_idx])):
-    #         if n_value[agent_idx][trust_idx] < epoch + 1:
-    #             n_value[agent_idx][trust_idx] += 1
-    #             agents_trust[agent_idx][agent_states[agent_idx]] = (
-    #                 Utilities.alpha * agents_trust[agent_idx][agent_states[agent_idx]] +
-    #                 (1 - Utilities.alpha) * 0
-    #             )
+            # if the episode is terminated, break the loop
+            if np.all(list(term.values())):
+                break
 
-    steps_list.append(epoch_step)
-    trust_list.append(agents_trust[0][2])
-
-# print('agents trust', agents_trust)
+        steps_list.append(epoch_step)
+        trust_list.append(agents_trust[0][2])
 
 # plot the # of step during evaluation
 plt.plot(steps_list)
 plt.show()
 
-# # plot the trust of agent_1 respect the press_button_1 event over time
-# plt.plot(trust_list)
-# plt.show()
-
 # show the result (pass to a not trainer environment and to a full greedy policy)
 show_env = gym.make('GridWorld-v0', render_mode='human', events=Utilities.events, rewarding_machines=agents_pythomata_rm)
-
-# print(q_tables[0][0])
-# print(q_tables[0][3])
-# print(q_tables[0][4])
-# print('#' * 20)
-# print(q_tables[1][5])
-# print('#' * 20)
-# print(q_tables[2][6])
 
 # set the value for show after the training without the trust
 obs, _ = show_env.reset()
@@ -203,7 +161,6 @@ obs, _ = show_env.reset()
 total_rew = 0
 total_step = 0
 
-# agent_states = [0, 0, 0]
 agent_states = train_env.unwrapped.get_next_flags()
 
 # start the steps loop
@@ -217,24 +174,18 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
                Policy.greedy_policy(q_tables[1][agent_states[1]], state_2),
                Policy.greedy_policy(q_tables[2][agent_states[2]], state_3)]
 
+    # # select manually the agents action
     # actions = []
     # for i in range(0, 3):
     #     ele = int(input())
     #     actions.append(ele)
 
     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
-    # print(actions_dict)
 
     # Perform the environment step
     obs, rew, term, _, _ = show_env.step(actions_dict)
 
-    print(rew)
-
-    # for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
-    #     if flag:
-    #         agent_states[flag_idx] += 1
     agent_states = show_env.unwrapped.get_next_flags()
-    print(agent_states)
 
     total_rew += sum(list(rew.values()))
     total_step += 1
@@ -245,53 +196,53 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
 print('accumulate reward function:', total_rew)
 print('# of steps to complete the task:', total_step)
 
-# set the value for show after the training with the trust
-obs, _ = show_env.reset()
-
-total_rew = 0
-total_step = 0
-
-agent_states = [0, 0, 0]
-temp_plus = [0, 0, 0]
-
-# start the steps loop
-for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
-
-    state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
-    state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
-    state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
-
-    for agent_idx in range(n_agents):
-
-        # trust problem if not reach the threshold
-        if agents_trust[agent_idx][agent_states[agent_idx]] < 0.2:
-            # TODO: temp_plus can be greater than 1 if a sequence of state have no trust
-            temp_plus[agent_idx] = 1
-        else:
-            temp_plus[agent_idx] = 0
-
-        if agent_states[agent_idx] + temp_plus[agent_idx] >= len(agents_trust[agent_idx]):
-            temp_plus[agent_idx] = 0
-
-    actions = [Policy.greedy_policy(q_tables[0][agent_states[0] + temp_plus[0]], state_1),
-               Policy.greedy_policy(q_tables[1][agent_states[1] + temp_plus[1]], state_2),
-               Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
-
-    actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
-    # print(actions_dict)
-
-    # Perform the environment step
-    obs, rew, term, _, _ = show_env.step(actions_dict)
-
-    for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
-        if flag:
-            agent_states[flag_idx] += 1
-
-    total_rew += sum(list(rew.values()))
-    total_step += 1
-
-    if np.all(list(term.values())):
-        break
-
-print('accumulate reward function:', total_rew)
-print('# of steps to complete the task:', total_step)
+# # set the value for show after the training with the trust
+# obs, _ = show_env.reset()
+#
+# total_rew = 0
+# total_step = 0
+#
+# agent_states = [0, 0, 0]
+# temp_plus = [0, 0, 0]
+#
+# # start the steps loop
+# for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
+#
+#     state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
+#     state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
+#     state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
+#
+#     for agent_idx in range(n_agents):
+#
+#         # trust problem if not reach the threshold
+#         if agents_trust[agent_idx][agent_states[agent_idx]] < 0.2:
+#             # TODO: temp_plus can be greater than 1 if a sequence of state have no trust
+#             temp_plus[agent_idx] = 1
+#         else:
+#             temp_plus[agent_idx] = 0
+#
+#         if agent_states[agent_idx] + temp_plus[agent_idx] >= len(agents_trust[agent_idx]):
+#             temp_plus[agent_idx] = 0
+#
+#     actions = [Policy.greedy_policy(q_tables[0][agent_states[0] + temp_plus[0]], state_1),
+#                Policy.greedy_policy(q_tables[1][agent_states[1] + temp_plus[1]], state_2),
+#                Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
+#
+#     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
+#     # print(actions_dict)
+#
+#     # Perform the environment step
+#     obs, rew, term, _, _ = show_env.step(actions_dict)
+#
+#     for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
+#         if flag:
+#             agent_states[flag_idx] += 1
+#
+#     total_rew += sum(list(rew.values()))
+#     total_step += 1
+#
+#     if np.all(list(term.values())):
+#         break
+#
+# print('accumulate reward function:', total_rew)
+# print('# of steps to complete the task:', total_step)

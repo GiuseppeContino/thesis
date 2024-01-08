@@ -30,18 +30,6 @@ class GridWorldEnv(gym.Env):
 
         self.next_flags = [0, 0, 0]
 
-        # states = Utilities.states
-        # initial_state = 'init'
-        # goal_state = 'end_state'
-        #
-        # transition_function = Utilities.transition_function
-        #
-        # pythomata_rm, _ = Utilities.transition_function_to_symbolic(transition_function, states)
-        #
-        # # save a file with the automata
-        # graph = pythomata_rm.to_graphviz()
-        # graph.render('./images/reward_machine')
-
         # agents initial position and colors
         agents_location = Utilities.agents_initial_location
 
@@ -49,25 +37,9 @@ class GridWorldEnv(gym.Env):
 
         self.agents = []
 
-        # agent_1_events = Utilities.agent_1_events
-        # agent_2_events = Utilities.agent_2_events
-        # agent_3_events = Utilities.agent_3_events
-
         agents_events = [Utilities.agent_1_events, Utilities.agent_2_events, Utilities.agent_3_events]
 
         for idx, agent_events in enumerate(agents_events):
-
-            # agent_transition_function = Utilities.individual_transition_function(
-            #     copy.deepcopy(Utilities.transition_function),
-            #     agents_events[idx],
-            #     initial_state,
-            #     goal_state
-            # )
-            #
-            # agent_states = {state for state in agent_transition_function.keys()}
-            # agent_states.add('end_state')
-            #
-            # agent_pythomata_rm, _ = Utilities.transition_function_to_symbolic(agent_transition_function, agent_states)
 
             agent_pythomata_rm = rewarding_machines[idx]
             agent_graph = agent_pythomata_rm.to_graphviz()
@@ -76,9 +48,6 @@ class GridWorldEnv(gym.Env):
             agent_automata = RewardAutomaton(agent_pythomata_rm, 1)
             agent_temp_goal = TemporalGoal(agent_automata)
 
-            # print(agent_temp_goal.current_state)
-            # self.next_flags[idx] = agent_temp_goal.current_state - 1
-
             self.agents.append(Agent.Agent(
                 agents_location[idx],
                 agents_color[idx],
@@ -86,29 +55,17 @@ class GridWorldEnv(gym.Env):
                 agents_events[idx]
             ))
 
-        # Observations are dictionaries with the agent's and the target's location.
-        # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
         self.observation_space = spaces.Dict(
             {
-                # 'agents': spaces.Dict({
-                #     'agent_1': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                #     'agent_2': spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                #     'agent_3': spaces.Box(0, size - 1, shape=(2,), dtype=int)
-                # }),
                 'agent_1': spaces.Box(0, size - 1, shape=(2,), dtype=int),
                 'agent_2': spaces.Box(0, size - 1, shape=(2,), dtype=int),
                 'agent_3': spaces.Box(0, size - 1, shape=(2,), dtype=int)
             }
         )
 
-        # We have 5 actions, corresponding to 'right', 'up', 'left', 'down', 'push_button'
+        # We have 6 actions, corresponding to 'right', 'up', 'left', 'down', 'push_button', 'open_pocket_door'
         self.action_space = spaces.Discrete(len(Utilities.actions))
 
-        '''
-        The following dictionary maps abstract actions from `self.action_space` to 
-        the direction we will walk in if that action is taken.
-        I.e. 0 corresponds to "right", 1 to "up" etc.
-        '''
         self._action_to_direction = {
             0: np.array([1, 0]),
             1: np.array([0, 1]),
@@ -210,13 +167,6 @@ class GridWorldEnv(gym.Env):
         assert render_mode is None or render_mode in self.metadata['render_modes']
         self.render_mode = render_mode
 
-        '''
-        If human-rendering is used, `self.window` will be a reference
-        to the window that we draw to. `self.clock` will be a clock that is used
-        to ensure that the environment is rendered at the correct frame-rate in
-        human-mode. They will remain `None` until human-mode is used for the
-        first time.
-        '''
         self.window = None
         self.clock = None
 
@@ -225,11 +175,6 @@ class GridWorldEnv(gym.Env):
 
     def _get_obs(self):
         return {
-            # 'agents': {
-            #     'agent_1': self.agents[0].position,
-            #     'agent_2': self.agents[1].position,
-            #     'agent_3': self.agents[2].position
-            # },
             'agent_1': self.agents[0].position,
             'agent_2': self.agents[1].position,
             'agent_3': self.agents[2].position
@@ -250,7 +195,6 @@ class GridWorldEnv(gym.Env):
         for idx, agent in enumerate(self.agents):
             agent.temporal_goal.reset()
             self.next_flags[idx] = agent.temporal_goal.current_state - 1
-        # print(self.next_flags)
 
         self.next_event = copy.copy(Utilities.events)
         self.pass_events = []
@@ -319,12 +263,7 @@ class GridWorldEnv(gym.Env):
                         self.agents[agent_idx].position + direction, 0, self.size - 1
                     )
 
-                # else:
-                #     reward = [0.0, 0.0, 0.0]
-                #     reward[agent_idx] = -1
-                #     return self._get_obs(), reward, False, False, self._get_info()
-
-            # check for open door
+            # check for push button to open door
             elif action == 4:
 
                 if (np.all(self.agents[agent_idx].position == self._doors_button[0]) and
@@ -333,7 +272,6 @@ class GridWorldEnv(gym.Env):
                     openers[0] += 1
                     if openers[0] >= self._doors_opener[0]:
                         event.append('open_green_door')
-                        # self._doors_flag[0] = 0
                         reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._doors_button[1]) and
@@ -342,7 +280,6 @@ class GridWorldEnv(gym.Env):
                     openers[1] += 1
                     if openers[1] >= self._doors_opener[1]:
                         event.append('open_magenta_door')
-                        # self._doors_flag[1] = 0
                         reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._doors_button[2]) and
@@ -351,37 +288,33 @@ class GridWorldEnv(gym.Env):
                     openers[2] += 1
                     if openers[2] >= self._doors_opener[2]:
                         event.append('open_blue_door')
-                        # self._doors_flag[2] = 0
                         reward[agent_idx] = 1.0
 
+            # check for open door
             elif action == 5:
 
                 if (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[0]) and
                         self._pocket_doors_flag[0] == 1):
 
                     event.append('open_pocket_door_1')
-                    # self._pocket_doors_flag[0] = 0
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[1]) and
                         self._pocket_doors_flag[1] == 1):
 
                     event.append('open_pocket_door_2')
-                    # self._pocket_doors_flag[1] = 0
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[2]) and
                         self._pocket_doors_flag[2] == 1 and self._doors_flag[1] == 1):
 
                     event.append('open_pocket_door_3')
-                    # self._pocket_doors_flag[2] = 0
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[3]) and
                         self._pocket_doors_flag[3] == 1 and self._doors_flag[1] == 0):
 
                     event.append('open_pocket_door_4')
-                    # self._pocket_doors_flag[3] = 0
                     reward[agent_idx] = 1.0
 
             agent_on_target = []
@@ -392,7 +325,6 @@ class GridWorldEnv(gym.Env):
                     for target_location in self._targets_location:
                         if self.training and np.array_equal(self.agents[agent_idx].position, target_location):
                             event = ['press_target_' + str(agent_idx + 1)]
-                            # print('training end', agent_idx)
                             reward[agent_idx] = 1.0
                 else:
                     for target_location in self._targets_location:
@@ -414,9 +346,8 @@ class GridWorldEnv(gym.Env):
             random_uniform = random.uniform(0, 1)
             if random_uniform > self.train_transition and self.next_event:
                 event = [self.next_event.pop(0)]
-                # print(self.events_idx)
-                # print(len(self.events))
 
+        # from the event to the correlated action
         if 'open_green_door' in event:
             self._doors_flag[0] = 0
         elif 'open_magenta_door' in event:
@@ -437,9 +368,11 @@ class GridWorldEnv(gym.Env):
 
         if event:
 
+            # remove from the next_event the pass event
             if self.training:
-                if event[0] in self.next_event:
-                    self.next_event.remove(event[0])
+                for item in event:
+                    if item in self.next_event:
+                        self.next_event.remove(item)
 
             # step on the agent individual reward machine
             for agent_idx, agent in enumerate(self.agents):
@@ -448,49 +381,20 @@ class GridWorldEnv(gym.Env):
                     set(event) & set(agent.get_events())
                 )
 
-                # print(agent_idx, agent.temporal_goal.current_state, event, common_events, self.next_event)
+                print(agent_idx, agent.temporal_goal.current_state, event, common_events, self.next_event)
 
                 if common_events and common_events[0] not in self.pass_events:
 
-                    # if not self.training:
-                    #     print(agent_idx, common_events)
-
                     agent.temporal_goal.step(common_events)
-
-                    # if self.render_mode == 'human':
-                    #     print(agent.temporal_goal.current_state)
-                    #     self.next_flags[agent_idx] = agent.temporal_goal.current_state
-
                     self.next_flags[agent_idx] = agent.temporal_goal.current_state - 1
-                    # print(agent.temporal_goal.current_state)
 
             # update the pass event
             for element in event:
                 if element not in self.pass_events:
                     self.pass_events.append(element)
 
-        # print(self.next_flags)
-
-        # open doors by event
-        if self.training:
-            for door_idx in range(len(self._doors_location)):
-
-                temp_event = ''
-
-                if door_idx == 0:
-                    temp_event = 'open_green_door'
-                elif door_idx == 1:
-                    temp_event = 'open_magenta_door'
-                elif door_idx == 2:
-                    temp_event = 'open_blue_door'
-
-                if self._doors_flag[door_idx] == 1 and temp_event in event:
-                    self._doors_flag[door_idx] = 0
-                    break
-
         # compute the reward dict
         reward_dict = {'agent_' + str(key + 1): value for key, value in enumerate(reward)}
-        # print(reward_dict)
 
         # compute the termination dict
         terminated = [
@@ -505,7 +409,6 @@ class GridWorldEnv(gym.Env):
              np.array_equal(self.agents[2].position, self._targets_location[2]))
         ]
         terminated_dict = {'agent_' + str(key + 1): value for key, value in enumerate(terminated)}
-        # print(terminated_dict)
 
         observation = self._get_obs()
         info = self._get_info()

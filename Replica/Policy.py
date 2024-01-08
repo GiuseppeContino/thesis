@@ -37,8 +37,4 @@ def epsilon_greedy_policy(environment, q_table, act_state, bound):
     else:
         action = environment.action_space.sample()
 
-    # 2% random slip
-    if action < 4 and random.uniform(0, 1) > 0.98:
-        action = random.randint(0, 3)
-
     return action

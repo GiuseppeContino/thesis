@@ -10,7 +10,7 @@ learning_rate = 0.7  # 0.8  # 0.7
 gamma = 0.95  # 0.9  # 0.95
 alpha = 0.9
 
-epochs = 1000  # 300
+epochs = 1000  # 1000
 max_episode_steps = 500
 test_num = 1
 

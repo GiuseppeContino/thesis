@@ -369,10 +369,9 @@ class GridWorldEnv(gym.Env):
         if event:
 
             # remove from the next_event the pass event
-            if self.training:
-                for item in event:
-                    if item in self.next_event:
-                        self.next_event.remove(item)
+            for item in event:
+                if item in self.next_event:
+                    self.next_event.remove(item)
 
             # step on the agent individual reward machine
             for agent_idx, agent in enumerate(self.agents):
@@ -381,7 +380,7 @@ class GridWorldEnv(gym.Env):
                     set(event) & set(agent.get_events())
                 )
 
-                print(agent_idx, agent.temporal_goal.current_state, event, common_events, self.next_event)
+                # print(agent_idx, agent.temporal_goal.current_state, event, common_events, self.next_event)
 
                 if common_events and common_events[0] not in self.pass_events:
 

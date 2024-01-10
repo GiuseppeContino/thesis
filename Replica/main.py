@@ -4,6 +4,8 @@ import tqdm
 import Utilities
 import Policy
 
+import copy
+
 from matplotlib import pyplot as plt
 import numpy as np
 from gymnasium.envs.registration import register
@@ -152,6 +154,11 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
 plt.plot(steps_list)
 plt.show()
 
+# print(q_tables[2][0])
+# print(q_tables[2][1])
+# print(q_tables[2][2])
+# print(q_tables[2][3])
+
 # show the result (pass to a not trainer environment and to a full greedy policy)
 show_env = gym.make('GridWorld-v0', render_mode='human', events=Utilities.events, rewarding_machines=agents_pythomata_rm)
 
@@ -179,6 +186,55 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     # for i in range(0, 3):
     #     ele = int(input())
     #     actions.append(ele)
+
+    actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
+
+    # Perform the environment step
+    obs, rew, term, _, _ = show_env.step(actions_dict)
+
+    agent_states = show_env.unwrapped.get_next_flags()
+
+    total_rew += sum(list(rew.values()))
+    total_step += 1
+
+    if np.all(list(term.values())):
+        break
+
+print('accumulate reward function:', total_rew)
+print('# of steps to complete the task:', total_step)
+
+# set the value for show after the training with the trust
+obs, _ = show_env.reset()
+
+total_rew = 0
+total_step = 0
+
+agent_states = show_env.unwrapped.get_next_flags()
+
+# start the steps loop
+for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
+
+    state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
+    state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
+    state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
+
+    temp_state = copy.copy(agent_states)
+
+    # anticipate the tasks
+    for agent_idx in range(n_agents):
+        if np.array_equal(q_tables[agent_idx][agent_states[agent_idx]],
+                          np.zeros_like(q_tables[agent_idx][agent_states[agent_idx]])):
+
+            temp_goal = show_env.unwrapped.agents[agent_idx].temporal_goal
+
+            if (len(list(temp_goal.automaton.get_transitions_from(temp_goal.current_state)))) == 1:
+
+                temp_state[agent_idx] = list(list(
+                    temp_goal.automaton.get_transitions_from(temp_goal.current_state))[0])[2] - 1
+
+    actions = [Policy.greedy_policy(q_tables[0][temp_state[0]], state_1),
+               Policy.greedy_policy(q_tables[1][temp_state[1]], state_2),
+               Policy.greedy_policy(q_tables[2][temp_state[2]], state_3)]
 
     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
 

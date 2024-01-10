@@ -23,7 +23,7 @@ class GridWorldEnv(gym.Env):
         self.events = events
         self.training = training
 
-        self.train_transition = 0.98
+        self.train_transition = Utilities.train_transition
 
         self.next_event = copy.copy(Utilities.events)
         self.pass_events = []
@@ -293,26 +293,32 @@ class GridWorldEnv(gym.Env):
             # check for open door
             elif action == 5:
 
+                random_float = random.uniform(0, 1)
+
                 if (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[0]) and
-                        self._pocket_doors_flag[0] == 1):
+                        self._pocket_doors_flag[0] == 1 and
+                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
 
                     event.append('open_pocket_door_1')
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[1]) and
-                        self._pocket_doors_flag[1] == 1):
+                        self._pocket_doors_flag[1] == 1 and
+                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
 
                     event.append('open_pocket_door_2')
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[2]) and
-                        self._pocket_doors_flag[2] == 1 and self._doors_flag[1] == 1):
+                        self._pocket_doors_flag[2] == 1 and self._doors_flag[1] == 1 and
+                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
 
                     event.append('open_pocket_door_3')
                     reward[agent_idx] = 1.0
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[3]) and
-                        self._pocket_doors_flag[3] == 1 and self._doors_flag[1] == 0):
+                        self._pocket_doors_flag[3] == 1 and self._doors_flag[1] == 0 and
+                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
 
                     event.append('open_pocket_door_4')
                     reward[agent_idx] = 1.0

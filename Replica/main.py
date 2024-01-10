@@ -218,23 +218,38 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
     state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
 
-    temp_state = copy.copy(agent_states)
+    temp_states = copy.copy(agent_states)
 
     # anticipate the tasks
     for agent_idx in range(n_agents):
-        if np.array_equal(q_tables[agent_idx][agent_states[agent_idx]],
-                          np.zeros_like(q_tables[agent_idx][agent_states[agent_idx]])):
 
-            temp_goal = show_env.unwrapped.agents[agent_idx].temporal_goal
+        # if np.array_equal(q_tables[agent_idx][agent_states[agent_idx]],
+        #                   np.zeros_like(q_tables[agent_idx][agent_states[agent_idx]])):
+        #
+        #     temp_goal = show_env.unwrapped.agents[agent_idx].temporal_goal
+        #
+        #     if (len(list(temp_goal.automaton.get_transitions_from(temp_goal.current_state)))) == 1:
+        #
+        #         temp_state[agent_idx] = list(list(
+        #             temp_goal.automaton.get_transitions_from(temp_goal.current_state))[0])[2] - 1
 
-            if (len(list(temp_goal.automaton.get_transitions_from(temp_goal.current_state)))) == 1:
+        temp_goal = show_env.unwrapped.agents[agent_idx].temporal_goal
+        temp_state = copy.copy(temp_goal.current_state)
 
-                temp_state[agent_idx] = list(list(
-                    temp_goal.automaton.get_transitions_from(temp_goal.current_state))[0])[2] - 1
+        while (np.array_equal(q_tables[agent_idx][temp_state], np.zeros_like(q_tables[agent_idx][temp_state])) and
+                len(list(temp_goal.automaton.get_transitions_from(temp_state))) == 1):
 
-    actions = [Policy.greedy_policy(q_tables[0][temp_state[0]], state_1),
-               Policy.greedy_policy(q_tables[1][temp_state[1]], state_2),
-               Policy.greedy_policy(q_tables[2][temp_state[2]], state_3)]
+            if str(list(list(temp_goal.automaton.get_transitions_from(temp_state))[0])[1])[:-1] == 'press_target_':
+                break
+
+            temp_states[agent_idx] = list(list(
+                    temp_goal.automaton.get_transitions_from(temp_state))[0])[2] - 1
+
+            temp_state = copy.copy(temp_states[agent_idx] + 1)
+
+    actions = [Policy.greedy_policy(q_tables[0][temp_states[0]], state_1),
+               Policy.greedy_policy(q_tables[1][temp_states[1]], state_2),
+               Policy.greedy_policy(q_tables[2][temp_states[2]], state_3)]
 
     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
 

@@ -10,7 +10,7 @@ learning_rate = 0.7  # 0.8  # 0.7
 gamma = 0.95  # 0.9  # 0.95
 alpha = 0.9
 
-epochs = 250  # 10000
+epochs = 250  # 5000  # 250
 max_episode_steps = 600
 train_transition = 0.98
 test_num = 1
@@ -40,8 +40,8 @@ agents_color = [
 ]
 
 # agents_prob = [1, 0.333, 1]
-agents_prob = [1, 0.333, 0.9]
-# agents_prob = [1, 1, 0.333]
+# agents_prob = [1, 0.333, 0.8]
+agents_prob = [1, 1, 0.333]
 
 
 def create_first_individual_rm():

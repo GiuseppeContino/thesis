@@ -154,7 +154,8 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
 plt.plot(steps_list)
 plt.show()
 
-print(q_tables[2][0])
+# print(q_tables[1][0])
+# print(q_tables[2][0])
 # print(q_tables[2][1])
 # print(q_tables[2][2])
 # print(q_tables[2][3])

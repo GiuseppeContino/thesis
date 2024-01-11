@@ -14,6 +14,10 @@ from temprl.wrapper import TemporalGoal
 import numpy as np
 
 
+def compute_average(actual_value, new_element, num):
+    return (num * actual_value + new_element) / (num + 1)
+
+
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
@@ -31,6 +35,7 @@ class GridWorldEnv(gym.Env):
         self.next_flags = [0, 0, 0]
 
         self.task_trust = [0, 0, 0]
+        self.task_n = [0, 0, 0]
 
         # agents initial position and colors
         agents_location = Utilities.agents_initial_location
@@ -195,6 +200,7 @@ class GridWorldEnv(gym.Env):
         self.pass_events = []
 
         self.task_trust = [0, 0, 0]
+        self.task_n = [0, 0, 0]
 
         # Reset agents position
         self.agents[0].position = Utilities.agents_initial_location[0]
@@ -295,55 +301,79 @@ class GridWorldEnv(gym.Env):
                         self._pocket_doors_flag[0] == 1):
                     if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
                         event.append('open_pocket_door_1')
-                        reward[agent_idx] += 1.0
-
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 1.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
                     elif 'open_pocket_door_1' not in self.events:
-                        reward[agent_idx] -= 0.3
-
-                    self.task_trust[agent_idx] += reward[agent_idx]
-                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
-                                                  (1 - Utilities.alpha) * reward[agent_idx])
+                        reward[agent_idx] = -0.3
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
+                    else:
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[1]) and
                         self._pocket_doors_flag[1] == 1):
 
                     if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
                         event.append('open_pocket_door_2')
-                        reward[agent_idx] += 1.0
-
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 1.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
                     elif 'open_pocket_door_2' not in self.events:
-                        reward[agent_idx] -= 0.3
-
-                    self.task_trust[agent_idx] += reward[agent_idx]
-                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
-                                                  (1 - Utilities.alpha) * reward[agent_idx])
+                        reward[agent_idx] = -0.3
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
+                    else:
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[2]) and
                         self._pocket_doors_flag[2] == 1 and self._doors_flag[1] == 1):
 
                     if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
                         event.append('open_pocket_door_3')
-                        reward[agent_idx] += 1.0
-
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 1.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
                     elif 'open_pocket_door_3' not in self.events:
-                        reward[agent_idx] -= 0.3
-
-                    self.task_trust[agent_idx] += reward[agent_idx]
-                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
-                                                  (1 - Utilities.alpha) * reward[agent_idx])
+                        reward[agent_idx] = -0.5
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
+                    else:
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[3]) and
                         self._pocket_doors_flag[3] == 1 and self._doors_flag[1] == 0):
                     if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
                         event.append('open_pocket_door_4')
-                        reward[agent_idx] += 1.0
-
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 1.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
                     elif 'open_pocket_door_4' not in self.events:
-                        reward[agent_idx] -= 0.3
-
-                    self.task_trust[agent_idx] += reward[agent_idx]
-                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
-                                                  (1 - Utilities.alpha) * reward[agent_idx])
+                        reward[agent_idx] = -0.3
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
+                    else:
+                        reward[agent_idx] = 1.0
+                        self.task_trust[agent_idx] = (
+                            compute_average(self.task_trust[agent_idx], 0.0, self.task_n[agent_idx]))
+                        self.task_n[agent_idx] += 1
 
             agent_on_target = []
 

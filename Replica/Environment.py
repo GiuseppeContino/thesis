@@ -30,6 +30,8 @@ class GridWorldEnv(gym.Env):
 
         self.next_flags = [0, 0, 0]
 
+        self.task_trust = [0, 0, 0]
+
         # agents initial position and colors
         agents_location = Utilities.agents_initial_location
 
@@ -92,14 +94,9 @@ class GridWorldEnv(gym.Env):
             np.array((4, 6)),
         ]
 
-        if self.training:
-            self._doors_opener = [1, 1, 1]
-        else:
-            self._doors_opener = [1, 1, 1]
-
-        self.events_idx = 0
-
+        self._doors_opener = [1, 1, 1]
         self._doors_flag = [1, 1, 1]
+        self._pocket_doors_flag = [1, 1, 1, 1]
 
         self._doors_color = [(127, 255, 0), (255, 0, 127), (0, 127, 255)]
 
@@ -116,8 +113,6 @@ class GridWorldEnv(gym.Env):
             np.array((8, 1)),
             np.array((5, 5)),
         ]
-
-        self._pocket_doors_flag = [1, 1, 1, 1]
 
         self._walls = (
             # First vertical wall
@@ -199,6 +194,8 @@ class GridWorldEnv(gym.Env):
         self.next_event = copy.copy(Utilities.events)
         self.pass_events = []
 
+        self.task_trust = [0, 0, 0]
+
         # Reset agents position
         self.agents[0].position = Utilities.agents_initial_location[0]
         self.agents[1].position = Utilities.agents_initial_location[1]
@@ -207,7 +204,6 @@ class GridWorldEnv(gym.Env):
         # Reset the doors flag to close all them
         self._doors_flag = [1, 1, 1]
         self._pocket_doors_flag = [1, 1, 1, 1]
-        self.events_idx = 0
 
         observation = self._get_obs()
         info = self._get_info()
@@ -296,32 +292,58 @@ class GridWorldEnv(gym.Env):
                 random_float = random.uniform(0, 1)
 
                 if (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[0]) and
-                        self._pocket_doors_flag[0] == 1 and
-                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
+                        self._pocket_doors_flag[0] == 1):
+                    if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
+                        event.append('open_pocket_door_1')
+                        reward[agent_idx] += 1.0
 
-                    event.append('open_pocket_door_1')
-                    reward[agent_idx] = 1.0
+                    elif 'open_pocket_door_1' not in self.events:
+                        reward[agent_idx] -= 0.3
+
+                    self.task_trust[agent_idx] += reward[agent_idx]
+                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
+                                                  (1 - Utilities.alpha) * reward[agent_idx])
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[1]) and
-                        self._pocket_doors_flag[1] == 1 and
-                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
+                        self._pocket_doors_flag[1] == 1):
 
-                    event.append('open_pocket_door_2')
-                    reward[agent_idx] = 1.0
+                    if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
+                        event.append('open_pocket_door_2')
+                        reward[agent_idx] += 1.0
+
+                    elif 'open_pocket_door_2' not in self.events:
+                        reward[agent_idx] -= 0.3
+
+                    self.task_trust[agent_idx] += reward[agent_idx]
+                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
+                                                  (1 - Utilities.alpha) * reward[agent_idx])
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[2]) and
-                        self._pocket_doors_flag[2] == 1 and self._doors_flag[1] == 1 and
-                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
+                        self._pocket_doors_flag[2] == 1 and self._doors_flag[1] == 1):
 
-                    event.append('open_pocket_door_3')
-                    reward[agent_idx] = 1.0
+                    if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
+                        event.append('open_pocket_door_3')
+                        reward[agent_idx] += 1.0
+
+                    elif 'open_pocket_door_3' not in self.events:
+                        reward[agent_idx] -= 0.3
+
+                    self.task_trust[agent_idx] += reward[agent_idx]
+                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
+                                                  (1 - Utilities.alpha) * reward[agent_idx])
 
                 elif (np.all(self.agents[agent_idx].position == self._pocket_doors_opener_position[3]) and
-                        self._pocket_doors_flag[3] == 1 and self._doors_flag[1] == 0 and
-                        (random_float <= Utilities.agents_prob[agent_idx] or self.training)):
+                        self._pocket_doors_flag[3] == 1 and self._doors_flag[1] == 0):
+                    if random_float <= Utilities.agents_prob[agent_idx]:  # or self.training:
+                        event.append('open_pocket_door_4')
+                        reward[agent_idx] += 1.0
 
-                    event.append('open_pocket_door_4')
-                    reward[agent_idx] = 1.0
+                    elif 'open_pocket_door_4' not in self.events:
+                        reward[agent_idx] -= 0.3
+
+                    self.task_trust[agent_idx] += reward[agent_idx]
+                    self.task_trust[agent_idx] = (Utilities.alpha * self.task_trust[agent_idx] +
+                                                  (1 - Utilities.alpha) * reward[agent_idx])
 
             agent_on_target = []
 

@@ -25,6 +25,7 @@ agent_2_events = ['open_green_door', 'open_pocket_door_2', 'open_magenta_door', 
                   'open_blue_door', 'press_target_2']
 agent_3_events = ['open_magenta_door', 'open_pocket_door_3', 'open_pocket_door_4', 'open_blue_door',
                   'press_target_3']
+# agent_3_events = ['open_magenta_door', 'open_pocket_door_4', 'open_blue_door', 'press_target_3']
 
 agents_initial_location = [
     np.array((0, 0)),
@@ -38,7 +39,9 @@ agents_color = [
     (0, 255, 255),
 ]
 
-agents_prob = [1, 0.333, 1]
+# agents_prob = [1, 0.333, 1]
+agents_prob = [1, 0.333, 0.9]
+# agents_prob = [1, 1, 0.333]
 
 
 def create_first_individual_rm():
@@ -112,36 +115,39 @@ def create_third_individual_rm():
 
     automaton = pythomata.impl.symbolic.SymbolicDFA()
 
-    state_0 = automaton.create_state()
+    # state_0 = automaton.create_state()
     state_1 = automaton.create_state()
-    state_2 = automaton.create_state()
+    # state_2 = automaton.create_state()
     state_3 = automaton.create_state()
     state_4 = automaton.create_state()
-    state_5 = automaton.create_state()
+    # state_5 = automaton.create_state()
     state_6 = automaton.create_state()
     state_7 = automaton.create_state()
-    state_8 = automaton.create_state()
+    # state_8 = automaton.create_state()
     state_9 = automaton.create_state()
 
-    automaton.set_initial_state(state_0)
-    automaton.set_accepting_state(state_8, True)
+    # automaton.set_initial_state(state_0)
+    automaton.set_initial_state(state_1)  # new state
+    # automaton.set_accepting_state(state_8, True)
     automaton.set_accepting_state(state_9, True)
 
-    automaton.add_transition((state_0, "open_pocket_door_3 & ~ open_magenta_door", state_1))
-    automaton.add_transition((state_0, "open_magenta_door & ~ open_pocket_door_3", state_2))
+    # automaton.add_transition((state_0, "open_pocket_door_3 & ~ open_magenta_door", state_1))
+    # automaton.add_transition((state_0, "open_magenta_door & ~ open_pocket_door_3", state_2))
 
     automaton.add_transition((state_1, "open_magenta_door", state_3))
-    automaton.add_transition((state_2, "open_pocket_door_3", state_3))
+    # automaton.add_transition((state_2, "open_pocket_door_3", state_3))
+    automaton.add_transition((state_1, "open_pocket_door_3 & ~ open_magenta_door", state_4))  # new transition
+    automaton.add_transition((state_4, "open_magenta_door", state_3))
 
-    automaton.add_transition((state_0, "open_pocket_door_3 & open_magenta_door", state_3))
+    # automaton.add_transition((state_0, "open_pocket_door_3 & open_magenta_door", state_3))
 
     automaton.add_transition((state_3, "open_pocket_door_4", state_6))
     automaton.add_transition((state_6, "open_blue_door", state_7))
 
-    automaton.add_transition((state_2, "open_pocket_door_4", state_4))
-    automaton.add_transition((state_4, "open_blue_door", state_5))
+    # automaton.add_transition((state_2, "open_pocket_door_4", state_4))
+    # automaton.add_transition((state_4, "open_blue_door", state_5))
 
-    automaton.add_transition((state_5, "press_target_3", state_8))
+    # automaton.add_transition((state_5, "press_target_3", state_8))
     automaton.add_transition((state_7, "press_target_3", state_9))
 
     return automaton

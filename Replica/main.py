@@ -154,7 +154,7 @@ for epoch in tqdm.tqdm(range(Utilities.epochs)):
 plt.plot(steps_list)
 plt.show()
 
-# print(q_tables[2][0])
+print(q_tables[2][0])
 # print(q_tables[2][1])
 # print(q_tables[2][2])
 # print(q_tables[2][3])
@@ -198,6 +198,7 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     total_step += 1
 
     if np.all(list(term.values())):
+        print(show_env.unwrapped.task_trust)
         break
 
 print('accumulate reward function:', total_rew)
@@ -222,16 +223,6 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
 
     # anticipate the tasks
     for agent_idx in range(n_agents):
-
-        # if np.array_equal(q_tables[agent_idx][agent_states[agent_idx]],
-        #                   np.zeros_like(q_tables[agent_idx][agent_states[agent_idx]])):
-        #
-        #     temp_goal = show_env.unwrapped.agents[agent_idx].temporal_goal
-        #
-        #     if (len(list(temp_goal.automaton.get_transitions_from(temp_goal.current_state)))) == 1:
-        #
-        #         temp_state[agent_idx] = list(list(
-        #             temp_goal.automaton.get_transitions_from(temp_goal.current_state))[0])[2] - 1
 
         temp_goal = show_env.unwrapped.agents[agent_idx].temporal_goal
         temp_state = copy.copy(temp_goal.current_state)
@@ -262,58 +253,8 @@ for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
     total_step += 1
 
     if np.all(list(term.values())):
+        print(show_env.unwrapped.task_trust)
         break
 
 print('accumulate reward function:', total_rew)
 print('# of steps to complete the task:', total_step)
-
-# # set the value for show after the training with the trust
-# obs, _ = show_env.reset()
-#
-# total_rew = 0
-# total_step = 0
-#
-# agent_states = [0, 0, 0]
-# temp_plus = [0, 0, 0]
-#
-# # start the steps loop
-# for step in tqdm.tqdm(range(Utilities.max_episode_steps)):
-#
-#     state_1 = obs['agent_1'][1] * Utilities.size + obs['agent_1'][0]
-#     state_2 = obs['agent_2'][1] * Utilities.size + obs['agent_2'][0]
-#     state_3 = obs['agent_3'][1] * Utilities.size + obs['agent_3'][0]
-#
-#     for agent_idx in range(n_agents):
-#
-#         # trust problem if not reach the threshold
-#         if agents_trust[agent_idx][agent_states[agent_idx]] < 0.2:
-#             # TODO: temp_plus can be greater than 1 if a sequence of state have no trust
-#             temp_plus[agent_idx] = 1
-#         else:
-#             temp_plus[agent_idx] = 0
-#
-#         if agent_states[agent_idx] + temp_plus[agent_idx] >= len(agents_trust[agent_idx]):
-#             temp_plus[agent_idx] = 0
-#
-#     actions = [Policy.greedy_policy(q_tables[0][agent_states[0] + temp_plus[0]], state_1),
-#                Policy.greedy_policy(q_tables[1][agent_states[1] + temp_plus[1]], state_2),
-#                Policy.greedy_policy(q_tables[2][agent_states[2] + temp_plus[2]], state_3)]
-#
-#     actions_dict = {'agent_' + str(key + 1): value for key, value in enumerate(actions)}
-#     # print(actions_dict)
-#
-#     # Perform the environment step
-#     obs, rew, term, _, _ = show_env.step(actions_dict)
-#
-#     for flag_idx, flag in enumerate(show_env.unwrapped.get_next_flags()):
-#         if flag:
-#             agent_states[flag_idx] += 1
-#
-#     total_rew += sum(list(rew.values()))
-#     total_step += 1
-#
-#     if np.all(list(term.values())):
-#         break
-#
-# print('accumulate reward function:', total_rew)
-# print('# of steps to complete the task:', total_step)
